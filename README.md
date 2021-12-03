@@ -28,6 +28,15 @@ $ when "in 4 hours in san francisco"
 $ when "2pm in 2 days in new delhi
 ```
 
+## Building
+
+Currently this needs to be build via `make` as the makefile downloads some data
+from geonames:
+
+```
+$ make install
+```
+
 ## Usage
 
 Basically takes a single argument which is a string which describes the format

@@ -9,6 +9,12 @@ download-data:
 build: download-data
 	@cargo build --all-features
 
+release: download-data
+	@cargo build --release
+
+install: download-data
+	@cargo install --path=.
+
 doc:
 	@cargo doc --all-features
 
@@ -24,4 +30,4 @@ lint:
 	@rustup component add clippy 2> /dev/null
 	@cargo clippy
 
-.PHONY: all doc test format format-check lint download-data clean-data
+.PHONY: all doc test format format-check lint download-data clean-data build release
