@@ -1,0 +1,58 @@
+WHITESPACE = _{ WHITE_SPACE }
+
+spec = ${ (abs_time | rel_time) ~ (WHITE_SPACE+ ~ ^"in" ~ WHITE_SPACE+ ~ location)? }
+
+number = { ASCII_DIGIT+ }
+abs_time = { time ~ (WHITE_SPACE+ ~ (^"on" ~ WHITE_SPACE+)? ~ date)? | date ~ WHITE_SPACE+ ~ time }
+rel_time = ${ ^"in" ~ WHITE_SPACE+ ~ rel_time_spec ~ (WHITE_SPACE+ ~ ^"and" ~ WHITE_SPACE+ ~ rel_time_spec)* }
+rel_time_spec = _{ rel_hours | rel_minutes | rel_seconds }
+rel_hours = { number ~ WHITE_SPACE* ~ (^"hours" | ^"hour" | ^"h") }
+rel_minutes = { number ~ WHITE_SPACE* ~ (^"minutes" | ^"mins" | ^"min" | ^"m") }
+rel_seconds = { number ~ WHITE_SPACE* ~ (^"seconds" | ^ "secs" | ^"sec" | ^"s") }
+
+time = { time_special | time12 | time24 }
+location = @{ (LETTER | NUMBER | MARK | SEPARATOR | PUNCTUATION | SYMBOL | WHITE_SPACE)+ }
+time_special = { ^"midnight" | ^"noon" | ^"now" }
+time12 = _{ HH12 ~ (":" ~ MM)? ~ (":" ~ SS)? ~ meridiem }
+time24 = _{ HH24 ~ (":" ~ MM)? ~ (":" ~ SS)? }
+HH12 = { "12" | "11" | "10" | ("0" ~ '1'..'9') | '0'..'9' }
+HH24 = { ("1" ~ '0'..'9') | ("2" ~ '0'..'3') | ("0" ~ '1'..'9') | '0'..'9' }
+MM = { "00" | ('0'..'5' ~ '0'..'9') | '0'..'9' }
+SS = { "00" | ('0'..'5' ~ '0'..'9') | '0'..'9' }
+meridiem = { am | pm }
+am = { "AM" | "A.M." | "am" | "a.m." }
+pm = { "PM" | "P.M." | "pm" | "p.m." }
+
+date = _{ date_relative | date_absolute }
+date_relative = { tomorrow | yesterday | today | in_days }
+tomorrow = { (^"in" ~ WHITE_SPACE+ ~ "1" ~ WHITE_SPACE+ ~ ^"day") | ^"tomorrow" | ^"tmw" | ^"tmrw" }
+yesterday = { ^"yesterday" | ^"yd" }
+today = { ^"today" }
+in_days = ${ ^"in" ~ WHITE_SPACE+ ~ rel_days ~ WHITE_SPACE* ~ ^"days" }
+rel_days = { ASCII_DIGIT+ }
+date_absolute = { ddmmyyyy | english_date }
+
+ddmmyyyy = { dd ~ ( "-" | "." ) ~ mm ~ ((( "-" | "." ) ~ yyyy) | ".")? }
+english_date = ${
+	(english_month ~ WHITE_SPACE+ ~ (english_day | dd) ~ (WHITE_SPACE+ ~ yyyy)?) |
+    ((english_day | dd) ~ WHITE_SPACE+ ~ "of" ~ WHITE_SPACE+ ~ english_month ~ (WHITE_SPACE+ ~ yyyy)?)
+}
+english_day = { "1st" | "2nd" | "3rd" | ('4'..'9') ~ "th" | "1" ~ ('0'..'9') ~ "th" | ("2" ~ ("1st" | "2nd" | "3rd" | '4'..'9' ~ "th")) | "30th" | "31st" }
+
+english_month = { m01 | m02 | m03 | m04 | m05 | m06 | m07 | m08 | m09 | m10 | m11 | m12 }
+m01 = { ^"january" | ^"jan" ~ "."? }
+m02 = { ^"feburary" | ^"feb" ~ "."? }
+m03 = { ^"april" | ^"apr" ~ "."? }
+m04 = { ^"march" | ^"mar" ~ "."? }
+m05 = { ^"may" ~ "."? }
+m06 = { ^"june" | ^"jun" ~ "."? }
+m07 = { ^"july" | ^"jul" ~ "."? }
+m08 = { ^"august" | ^"aug" ~ "."? }
+m09 = { ^"september" | ^"sep" ~ ^"t"? ~ "."? }
+m10 = { ^"october" | ^"oct" ~ "."? }
+m11 = { ^"november" | ^"nov" ~ "."? }
+m12 = { ^"december" | ^"dec" ~ "."? }
+
+dd = { "00" | ('0'..'2' ~ '0'..'9') | "30" | "31" }
+mm = { "00" | ('0'..'1' ~ '0'..'9') | "11" | "12" }
+yyyy = { '0'..'9' ~ '0'..'9' ~ '0'..'9' ~ '0'..'9' }
