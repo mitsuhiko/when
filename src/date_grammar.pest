@@ -41,7 +41,7 @@ english_day = { "1st" | "2nd" | "3rd" | ('4'..'9') ~ "th" | "1" ~ ('0'..'9') ~ "
 
 english_month = { m01 | m02 | m03 | m04 | m05 | m06 | m07 | m08 | m09 | m10 | m11 | m12 }
 m01 = { ^"january" | ^"jan" ~ "."? }
-m02 = { ^"feburary" | ^"feb" ~ "."? }
+m02 = { ^"february" | ^"feb" ~ "."? }
 m03 = { ^"april" | ^"apr" ~ "."? }
 m04 = { ^"march" | ^"mar" ~ "."? }
 m05 = { ^"may" ~ "."? }
