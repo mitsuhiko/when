@@ -188,7 +188,15 @@ fn parse_input<'a>(expr: &'a str) -> Result<Expr<'a>, DateParseError> {
                                             time_piece.into_inner().next().unwrap().as_rule(),
                                             Rule::pm
                                         ) {
-                                            hour += 12;
+                                            // don't change for 12pm
+                                            if hour != 12 {
+                                                hour += 12;
+                                            }
+                                        } else {
+                                            // special case 12am = midnight
+                                            if hour == 12 {
+                                                hour = 0;
+                                            }
                                         }
                                     }
                                     Rule::time_special => {
