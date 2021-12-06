@@ -33,7 +33,7 @@ $ when "2pm in 2 days in new delhi
 Conveniently via cargo:
 
 ```
-$ cargo install git+https://github.com/mitsuhiko/when
+$ cargo install --git https://github.com/mitsuhiko/when
 ```
 
 ## Usage
