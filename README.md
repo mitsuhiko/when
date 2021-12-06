@@ -1,6 +1,6 @@
 # when
 
-`when` is a small utility which tells you want time it is
+`when` is a small utility which tells you what time it is
 somewhere or what some time is somewhere.
 
 ```
