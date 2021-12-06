@@ -98,8 +98,7 @@ dependencies = [
 [[package]]
 name = "chrono-tz"
 version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64c01c1c607d25c71bbaa67c113d6c6b36c434744b4fd66691d711b5b1bc0c8b"
+source = "git+https://github.com/mitsuhiko/chrono-tz?rev=00402ad500624963913a6e907feadbbb5ae5e074#00402ad500624963913a6e907feadbbb5ae5e074"
 dependencies = [
  "chrono",
  "chrono-tz-build",
@@ -109,8 +108,7 @@ dependencies = [
 [[package]]
 name = "chrono-tz-build"
 version = "0.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db058d493fb2f65f41861bfed7e3fe6335264a9f0f92710cab5bdf01fef09069"
+source = "git+https://github.com/mitsuhiko/chrono-tz?rev=00402ad500624963913a6e907feadbbb5ae5e074#00402ad500624963913a6e907feadbbb5ae5e074"
 dependencies = [
  "parse-zoneinfo",
  "phf",

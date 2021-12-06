@@ -15,14 +15,14 @@ struct Cli {
 
     /// the input to convert
     #[argh(positional)]
-    input: Vec<String>,
+    input: String,
 }
 
 fn print_date(date: DateTime<Tz>, zone: ZoneRef) {
     let adjusted = date.with_timezone(&zone.tz());
     println!("time: {}", adjusted.format("%H:%M:%S"));
     println!("date: {}", adjusted.format("%Y-%m-%d"));
-    if zone.kind() == ZoneKind::City {
+    if zone.kind() != ZoneKind::Timezone {
         print!("location: {}", zone.name());
         print!(" (");
         let mut with_code = false;
@@ -45,8 +45,7 @@ fn print_date(date: DateTime<Tz>, zone: ZoneRef) {
 pub fn execute() -> Result<(), anyhow::Error> {
     let cli: Cli = argh::from_env();
 
-    let input_expr = cli.input.join(" ");
-    let expr = Expr::parse(&input_expr)?;
+    let expr = Expr::parse(&cli.input)?;
     let zone_ref = expr
         .location()
         .ok_or_else(|| anyhow!("location is currently required"))?;

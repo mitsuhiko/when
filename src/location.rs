@@ -4,6 +4,8 @@ use chrono_tz::Tz;
 pub enum ZoneKind {
     City,
     Timezone,
+    Airport,
+    Division,
 }
 
 #[derive(Debug)]
@@ -11,6 +13,7 @@ pub struct Location {
     pub(crate) name: &'static str,
     pub(crate) country: &'static str,
     pub(crate) admin_code: Option<&'static str>,
+    pub(crate) aliases: &'static [&'static str],
     pub(crate) kind: ZoneKind,
     pub(crate) tz: Tz,
 }
@@ -85,8 +88,24 @@ pub fn find_zone(name: &str) -> Option<ZoneRef> {
             }
         }
     }
-    LOCATIONS
+
+    if let Some(loc) = LOCATIONS
         .iter()
         .find(|x| x.name.eq_ignore_ascii_case(name))
         .map(ZoneRef::Location)
+    {
+        return Some(loc);
+    }
+
+    if name.len() == 3 {
+        if let Some(loc) = LOCATIONS
+            .iter()
+            .find(|x| x.aliases.iter().any(|x| x.eq_ignore_ascii_case(name)))
+            .map(ZoneRef::Location)
+        {
+            return Some(loc);
+        }
+    }
+
+    None
 }

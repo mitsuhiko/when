@@ -1,18 +1,12 @@
 all: build
 
-clean-data:
-	@rm -rf data
-
-download-data:
-	@./scripts/download-data.sh
-
-build: download-data
+build:
 	@cargo build --all-features
 
-release: download-data
+release:
 	@cargo build --release
 
-install: download-data
+install:
 	@cargo install --path=.
 
 doc:
@@ -30,4 +24,4 @@ lint:
 	@rustup component add clippy 2> /dev/null
 	@cargo clippy
 
-.PHONY: all doc test format format-check lint download-data clean-data build release
+.PHONY: all doc test format format-check lint clean-data build release
