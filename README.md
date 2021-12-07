@@ -39,8 +39,8 @@ $ cargo install --git https://github.com/mitsuhiko/when
 ## Usage
 
 Basically takes a single argument which is a string which describes the format
-in roughly this syntax.  At the moment the first location is necessary but the
-other location is optional.
+in roughly this syntax.  Both locations are optional.  The "local" location always
+refers to the current machine's timezone.
 
 ```
 time and date in location -> other location
