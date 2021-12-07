@@ -1,9 +1,17 @@
 [package]
-name = "when"
+name = "when-cli"
 version = "0.1.0"
 edition = "2021"
+authors = ["Armin Ronacher <armin.ronacher@active-4.com>"]
+license = "Apache-2.0"
+description = "a command line tool for converting times between timezones"
+repository = "https://github.com/mitsuhiko/when"
+keywords = ["timezone", "convert", "cli"]
+readme = "README.md"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "when"
+path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0.51"

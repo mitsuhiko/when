@@ -16,6 +16,14 @@ location: San Francisco (CA; United States)
 zone: America/Los_Angeles (-0800)
 ```
 
+## Installation
+
+Conveniently via cargo:
+
+```
+$ cargo install when-cli
+```
+
 ## Examples
 
 These are some other things you can do:
@@ -26,14 +34,6 @@ $ when "4pm on 17.05.2021 in vienna -> tokyo"
 $ when "4pm yesterday in vienna -> vienna va"
 $ when "in 4 hours in san francisco"
 $ when "2pm in 2 days in new delhi
-```
-
-## Installation
-
-Conveniently via cargo:
-
-```
-$ cargo install --git https://github.com/mitsuhiko/when
 ```
 
 ## Usage
