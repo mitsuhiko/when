@@ -320,10 +320,11 @@ fn parse_input(expr: &str) -> Result<Expr<'_>, DateParseError> {
                     }
                 }
             }
-            Rule::rel_time => {
+            Rule::rel_time | Rule::neg_rel_time => {
                 let mut hours = 0;
                 let mut minutes = 0;
                 let mut seconds = 0;
+                let is_negative = piece.as_rule() == Rule::neg_rel_time;
                 for time_piece in piece.into_inner() {
                     match time_piece.as_rule() {
                         Rule::rel_hours => {
@@ -337,6 +338,11 @@ fn parse_input(expr: &str) -> Result<Expr<'_>, DateParseError> {
                         }
                         _ => unreachable!(),
                     }
+                }
+                if is_negative {
+                    hours *= -1;
+                    minutes *= -1;
+                    seconds *= -1;
                 }
                 rv.time_spec = Some(TimeSpec::Rel {
                     hours,

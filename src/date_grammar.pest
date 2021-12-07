@@ -1,11 +1,12 @@
 WHITESPACE = _{ WHITE_SPACE }
 
-spec = ${ (abs_time | rel_time) ~ (WHITE_SPACE+ ~ ^"in" ~ WHITE_SPACE+ ~ location)? }
+spec = ${ (neg_rel_time | abs_time | rel_time) ~ (WHITE_SPACE+ ~ ^"in" ~ WHITE_SPACE+ ~ location)? }
 
 number = { ASCII_DIGIT+ }
 abs_time = { time ~ (WHITE_SPACE+ ~ (^"on" ~ WHITE_SPACE+)? ~ date)? | date ~ WHITE_SPACE+ ~ time }
 rel_time = ${ ^"in" ~ WHITE_SPACE+ ~ rel_time_spec ~ (WHITE_SPACE+ ~ ^"and" ~ WHITE_SPACE+ ~ rel_time_spec)* }
 rel_time_spec = _{ rel_hours | rel_minutes | rel_seconds }
+neg_rel_time = ${ rel_time_spec ~ (WHITE_SPACE+ ~ ^"and" ~ WHITE_SPACE+ ~ rel_time_spec)* ~ WHITE_SPACE+ ~ ^"ago" }
 rel_hours = { number ~ WHITE_SPACE* ~ (^"hours" | ^"hour" | ^"h") }
 rel_minutes = { number ~ WHITE_SPACE* ~ (^"minutes" | ^"mins" | ^"min" | ^"m") }
 rel_seconds = { number ~ WHITE_SPACE* ~ (^"seconds" | ^ "secs" | ^"sec" | ^"s") }

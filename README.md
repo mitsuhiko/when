@@ -53,7 +53,7 @@ Time and date can be provided roughly like this:
 * `14:30`
 * `17:00 on 20.05.` (DD.MM.)
 * `17:00 on 20.05.2020` (DD.MM.YYYY)
-* relative times (`in 4 hours`)
+* relative times (`in 4 hours` or `4 hours ago`)
 
 For locations many major cities are supported as well as
 common timezone names like `Europe/Vienna`.
