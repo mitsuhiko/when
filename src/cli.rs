@@ -1,6 +1,3 @@
-use std::borrow::Cow;
-
-use anyhow::anyhow;
 use argh::FromArgs;
 use chrono::{DateTime, Utc};
 use chrono_tz::Tz;
@@ -39,8 +36,8 @@ fn print_date(date: DateTime<Tz>, zone: ZoneRef) {
             print!("{}", country);
         }
         print!(")");
+        println!();
     }
-    println!();
     println!("zone: {} ({})", zone.tz().name(), adjusted.format("%z"));
 }
 
@@ -48,20 +45,13 @@ pub fn execute() -> Result<(), anyhow::Error> {
     let cli: Cli = argh::from_env();
 
     let expr = Expr::parse(&cli.input)?;
-    let zone_ref = match expr.location() {
-        Some(loc) => Cow::Borrowed(loc),
-        None => localzone::get_local_zone()
-            .map(Cow::Owned)
-            .unwrap_or(Cow::Borrowed("Etc/UTC")),
-    };
-    let from_zone =
-        find_zone(&zone_ref).ok_or_else(|| anyhow!("unknown location '{}'", zone_ref))?;
+    let zone_ref = expr.location().unwrap_or("local");
+    let from_zone = find_zone(&zone_ref)?;
     let now = Utc::now().with_timezone(&from_zone.tz());
     let from = expr.apply(now);
 
     let to = if let Some(to_zone_ref) = expr.to_location() {
-        let to_zone =
-            find_zone(to_zone_ref).ok_or_else(|| anyhow!("unknown location '{}'", to_zone_ref))?;
+        let to_zone = find_zone(to_zone_ref)?;
         let to = from.with_timezone(&to_zone.tz());
         Some((to, to_zone))
     } else {

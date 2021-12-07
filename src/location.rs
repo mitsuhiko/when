@@ -1,3 +1,6 @@
+use std::borrow::Cow;
+
+use anyhow::{bail, Error};
 use chrono_tz::Tz;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -67,11 +70,20 @@ impl ZoneRef {
 include!(concat!(env!("OUT_DIR"), "/locations.rs"));
 
 /// Tries to locate a zone by name
-pub fn find_zone(name: &str) -> Option<ZoneRef> {
+pub fn find_zone(name: &str) -> Result<ZoneRef, Error> {
+    let name = if name.eq_ignore_ascii_case("local") {
+        match localzone::get_local_zone() {
+            Some(zone) => Cow::Owned(zone),
+            None => Cow::Borrowed("UTC"),
+        }
+    } else {
+        Cow::Borrowed(name)
+    };
+
     let tz_name = name.replace(" ", "_");
     for tz in chrono_tz::TZ_VARIANTS {
         if tz.name().eq_ignore_ascii_case(&tz_name) {
-            return Some(ZoneRef::Tz(tz));
+            return Ok(ZoneRef::Tz(tz));
         }
     }
 
@@ -84,28 +96,28 @@ pub fn find_zone(name: &str) -> Option<ZoneRef> {
                     && (x.country.eq_ignore_ascii_case(code)
                         || x.admin_code.map_or(false, |x| x.eq_ignore_ascii_case(code)))
             }) {
-                return Some(ZoneRef::Location(rv));
+                return Ok(ZoneRef::Location(rv));
             }
         }
     }
 
     if let Some(loc) = LOCATIONS
         .iter()
-        .find(|x| x.name.eq_ignore_ascii_case(name))
+        .find(|x| x.name.eq_ignore_ascii_case(&name))
         .map(ZoneRef::Location)
     {
-        return Some(loc);
+        return Ok(loc);
     }
 
     if name.len() == 3 {
         if let Some(loc) = LOCATIONS
             .iter()
-            .find(|x| x.aliases.iter().any(|x| x.eq_ignore_ascii_case(name)))
+            .find(|x| x.aliases.iter().any(|x| x.eq_ignore_ascii_case(&name)))
             .map(ZoneRef::Location)
         {
-            return Some(loc);
+            return Ok(loc);
         }
     }
 
-    None
+    bail!("unknown time zone '{}'", name)
 }
