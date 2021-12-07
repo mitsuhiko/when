@@ -12,9 +12,9 @@ struct Cli {
     #[argh(switch, short = 's')]
     short: bool,
 
-    /// the input to convert
+    /// the input expression to evaluate
     #[argh(positional)]
-    input: String,
+    expr: String,
 }
 
 fn print_date(date: DateTime<Tz>, zone: ZoneRef) {
@@ -44,7 +44,7 @@ fn print_date(date: DateTime<Tz>, zone: ZoneRef) {
 pub fn execute() -> Result<(), anyhow::Error> {
     let cli: Cli = argh::from_env();
 
-    let expr = Expr::parse(&cli.input)?;
+    let expr = Expr::parse(&cli.expr)?;
     let zone_ref = expr.location().unwrap_or("local");
     let from_zone = find_zone(&zone_ref)?;
     let now = Utc::now().with_timezone(&from_zone.tz());

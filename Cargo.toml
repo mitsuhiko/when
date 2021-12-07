@@ -17,7 +17,7 @@ path = "src/main.rs"
 anyhow = "1.0.51"
 argh = "0.1.6"
 chrono = "0.4.19"
-chrono-tz = { git = "https://github.com/mitsuhiko/chrono-tz", rev = "00402ad500624963913a6e907feadbbb5ae5e074" }
+chrono-tz = "0.6.1"
 localzone = "0.1.0"
 pest = "2.1.3"
 pest_derive = "2.1.0"
