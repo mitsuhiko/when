@@ -18,14 +18,10 @@ fn main() {
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let mut out = fs::File::create(out_dir.join("locations.rs")).unwrap();
 
-    writeln!(
-        out,
-        "pub static COUNTRIES: &[(&'static str, &'static str)] = &[",
-    )
-    .unwrap();
+    writeln!(out, "pub static COUNTRIES: &[(&str, &str)] = &[",).unwrap();
     for line in BufReader::new(fs::File::open("data/countries.txt").unwrap()).lines() {
         let line = line.unwrap();
-        let pieces = line.split("\t").collect::<Vec<_>>();
+        let pieces = line.split('\t').collect::<Vec<_>>();
         writeln!(out, "  ({:?}, {:?}),", pieces[0], pieces[1]).unwrap();
     }
     writeln!(out, "];").unwrap();
@@ -33,12 +29,12 @@ fn main() {
     writeln!(out, "pub static LOCATIONS: &[Location] = &[",).unwrap();
     for line in BufReader::new(fs::File::open("data/locations.txt").unwrap()).lines() {
         let line = line.unwrap();
-        let pieces = line.split("\t").collect::<Vec<_>>();
+        let pieces = line.split('\t').collect::<Vec<_>>();
         writeln!(
             out,
             "  Location {{ name: {:?}, aliases: &{:?}, country: {:?}, admin_code: {:?}, kind: ZoneKind::{}, tz: Tz::{} }},",
             pieces[0],
-            if pieces[1].is_empty() { vec![] } else { pieces[1].split(";").collect::<Vec<_>>() },
+            if pieces[1].is_empty() { vec![] } else { pieces[1].split(';').collect::<Vec<_>>() },
             pieces[2],
             if pieces[3].is_empty() { None } else { Some(pieces[2]) },
             match pieces[4] {

@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use anyhow::anyhow;
 use argh::FromArgs;
 use chrono::{DateTime, Utc};
@@ -46,11 +48,14 @@ pub fn execute() -> Result<(), anyhow::Error> {
     let cli: Cli = argh::from_env();
 
     let expr = Expr::parse(&cli.input)?;
-    let zone_ref = expr
-        .location()
-        .ok_or_else(|| anyhow!("location is currently required"))?;
+    let zone_ref = match expr.location() {
+        Some(loc) => Cow::Borrowed(loc),
+        None => localzone::get_local_zone()
+            .map(Cow::Owned)
+            .unwrap_or(Cow::Borrowed("Etc/UTC")),
+    };
     let from_zone =
-        find_zone(zone_ref).ok_or_else(|| anyhow!("unknown location '{}'", zone_ref))?;
+        find_zone(&zone_ref).ok_or_else(|| anyhow!("unknown location '{}'", zone_ref))?;
     let now = Utc::now().with_timezone(&from_zone.tz());
     let from = expr.apply(now);
 

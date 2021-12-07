@@ -128,13 +128,10 @@ pub enum DateSpec {
 }
 
 fn as_int(pair: Pair<Rule>) -> i32 {
-    for inner in pair.into_inner() {
-        return inner.as_str().parse().unwrap();
-    }
-    unreachable!()
+    pair.into_inner().next().unwrap().as_str().parse().unwrap()
 }
 
-fn parse_input<'a>(expr: &'a str) -> Result<Expr<'a>, DateParseError> {
+fn parse_input(expr: &str) -> Result<Expr<'_>, DateParseError> {
     let expr = expr.trim();
     let pair = DateParser::parse(Rule::spec, expr)
         .map_err(DateParseError::Parser)?
