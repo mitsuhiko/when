@@ -3,6 +3,7 @@ use std::ops::Add;
 
 use chrono::{DateTime, Datelike, Duration, Timelike};
 use chrono_tz::Tz;
+use pest::error::ErrorVariant;
 use pest::iterators::Pair;
 use pest::Parser;
 use pest_derive::Parser;
@@ -17,10 +18,45 @@ impl std::error::Error for DateParseError {}
 
 impl fmt::Display for DateParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        struct Enumerate<'a, T: fmt::Debug>(&'a [T]);
+
+        impl<'a, T: fmt::Debug> fmt::Display for Enumerate<'a, T> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                for (idx, item) in self.0.iter().enumerate() {
+                    if idx > 0 {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "{:?}", item)?;
+                }
+                Ok(())
+            }
+        }
+
         match self {
-            DateParseError::Parser(p) => write!(f, "{}", p),
+            DateParseError::Parser(p) => {
+                write!(f, "invalid syntax (")?;
+                match &p.variant {
+                    ErrorVariant::ParsingError {
+                        positives,
+                        negatives,
+                    } => match (negatives.is_empty(), positives.is_empty()) {
+                        (false, false) => write!(
+                            f,
+                            "unexpected {}; expected {}",
+                            Enumerate(&negatives),
+                            Enumerate(&positives)
+                        )?,
+                        (false, true) => write!(f, "unexpected {}", Enumerate(&negatives))?,
+                        (true, false) => write!(f, "expected {}", Enumerate(&positives))?,
+                        (true, true) => write!(f, "unknown parsing error")?,
+                    },
+                    ErrorVariant::CustomError { message } => write!(f, "{}", message)?,
+                }
+                write!(f, ")")?;
+                Ok(())
+            }
             DateParseError::Garbage(leftover) => {
-                write!(f, "invalid syntax (unsure how to handle {:?})", leftover)
+                write!(f, "invalid syntax (unsure how to interpret {:?})", leftover)
             }
         }
     }

@@ -1,6 +1,8 @@
+use anyhow::bail;
 use argh::FromArgs;
 use chrono::{DateTime, Utc};
 use chrono_tz::Tz;
+use console::style;
 
 use crate::location::{find_zone, ZoneKind, ZoneRef};
 use crate::parser::Expr;
@@ -12,6 +14,10 @@ struct Cli {
     #[argh(switch, short = 's')]
     short: bool,
 
+    /// controls when to use colors. Choices are `auto`, `never`, `always`.
+    #[argh(option, long = "colors")]
+    colors: Option<String>,
+
     /// the input expression to evaluate
     #[argh(positional)]
     expr: String,
@@ -19,10 +25,14 @@ struct Cli {
 
 fn print_date(date: DateTime<Tz>, zone: ZoneRef) {
     let adjusted = date.with_timezone(&zone.tz());
-    println!("time: {}", adjusted.format("%H:%M:%S"));
-    println!("date: {}", adjusted.format("%Y-%m-%d"));
+    println!("time: {}", style(adjusted.format("%H:%M:%S")).bold().cyan());
+    println!(
+        "date: {} ({})",
+        style(adjusted.format("%Y-%m-%d")).yellow(),
+        style(adjusted.format("%A")),
+    );
     if zone.kind() != ZoneKind::Timezone {
-        print!("location: {}", zone.name());
+        print!("location: {}", style(zone.name()).green());
         print!(" (");
         let mut with_code = false;
         if let Some(code) = zone.admin_code() {
@@ -38,11 +48,22 @@ fn print_date(date: DateTime<Tz>, zone: ZoneRef) {
         print!(")");
         println!();
     }
-    println!("zone: {} ({})", zone.tz().name(), adjusted.format("%z"));
+    println!(
+        "zone: {} ({})",
+        style(zone.tz().name()).underlined(),
+        adjusted.format("%z")
+    );
 }
 
 pub fn execute() -> Result<(), anyhow::Error> {
     let cli: Cli = argh::from_env();
+
+    match cli.colors.as_deref() {
+        None | Some("auto") => {}
+        Some("always") => console::set_colors_enabled(true),
+        Some("never") => console::set_colors_enabled(false),
+        Some(other) => bail!("unknown value for --colors ({})", other),
+    };
 
     let expr = Expr::parse(&cli.expr)?;
     let zone_ref = expr.location().unwrap_or("local");
