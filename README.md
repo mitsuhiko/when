@@ -29,6 +29,9 @@ $ cargo install when-cli
 These are some other things you can do:
 
 ```
+$ when "now"
+$ when "2 hours ago in yyz"
+$ when "5pm in yyz -> sfo"
 $ when "5pm in vienna -> london"
 $ when "4pm on 17.05.2021 in vienna -> tokyo"
 $ when "4pm yesterday in vienna -> vienna va"
