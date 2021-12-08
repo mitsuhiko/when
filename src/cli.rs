@@ -3,6 +3,8 @@ use chrono::{DateTime, Utc};
 use chrono_tz::Tz;
 use clap::Parser;
 use console::style;
+use serde::ser::SerializeMap;
+use serde::{Serialize, Serializer};
 
 use crate::location::{find_zone, ZoneKind, ZoneRef};
 use crate::parser::Expr;
@@ -33,6 +35,10 @@ struct Cli {
     /// controls when to use colors. Choices are `auto`, `never`, `always`.
     #[clap(long = "colors")]
     colors: Option<String>,
+
+    /// output in JSON format.
+    #[clap(long = "json")]
+    json: bool,
 
     /// the input expression to evaluate.
     ///
@@ -73,6 +79,42 @@ fn print_date(date: DateTime<Tz>, zone: ZoneRef) {
     );
 }
 
+pub struct JsonLocation<'a>(&'a ZoneRef);
+
+impl<'a> Serialize for JsonLocation<'a> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut m = serializer.serialize_map(None)?;
+        m.serialize_entry("name", self.0.name())?;
+        if let Some(admin_code) = self.0.admin_code() {
+            m.serialize_entry("admin_code", &admin_code)?;
+        }
+        if let Some(country) = self.0.country() {
+            m.serialize_entry("country", &country)?;
+        }
+        m.end()
+    }
+}
+
+pub struct JsonEntry<'a>(&'a DateTime<Tz>, &'a ZoneRef);
+
+impl<'a> Serialize for JsonEntry<'a> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut m = serializer.serialize_map(None)?;
+        m.serialize_entry("datetime", &self.0)?;
+        m.serialize_entry("timezone", self.1.tz().name())?;
+        if self.1.kind() != ZoneKind::Timezone {
+            m.serialize_entry("location", &JsonLocation(self.1))?;
+        }
+        m.end()
+    }
+}
+
 pub fn execute() -> Result<(), anyhow::Error> {
     let cli = Cli::parse();
 
@@ -105,7 +147,13 @@ pub fn execute() -> Result<(), anyhow::Error> {
         }
     }
 
-    if cli.short {
+    if cli.json {
+        let mut entries = vec![JsonEntry(&from, &from_zone)];
+        for (date, loc) in to_info.iter() {
+            entries.push(JsonEntry(date, loc));
+        }
+        println!("{}", serde_json::to_string_pretty(&entries).unwrap());
+    } else if cli.short {
         println!("{} ({})", from.format("%Y-%m-%d %H:%M:%S %z"), from_zone);
         for (date, loc) in to_info.iter() {
             println!("{} ({})", date.format("%Y-%m-%d %H:%M:%S %z"), loc);
