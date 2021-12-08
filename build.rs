@@ -3,17 +3,6 @@ use std::fs;
 use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
 
-#[derive(PartialOrd, Ord, PartialEq, Eq)]
-struct LocationRecord<'a> {
-    name: &'a str,
-    is_important: bool,
-    population: i64,
-    country: &'a str,
-    admin_code: &'a str,
-    airport_code: Option<&'a str>,
-    tz: &'a str,
-}
-
 fn main() {
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let mut out = fs::File::create(out_dir.join("locations.rs")).unwrap();
@@ -36,7 +25,7 @@ fn main() {
             pieces[0],
             if pieces[1].is_empty() { vec![] } else { pieces[1].split(';').collect::<Vec<_>>() },
             pieces[2],
-            if pieces[3].is_empty() { None } else { Some(pieces[2]) },
+            if pieces[3].is_empty() { None } else { Some(pieces[3]) },
             match pieces[4] {
                 "city" => "City",
                 "airport" => "Airport",
