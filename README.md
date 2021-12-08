@@ -28,6 +28,7 @@ $ when "4pm on 17.05.2021 in vienna -> tokyo"
 $ when "4pm yesterday in vienna -> vienna va"
 $ when "in 4 hours in san francisco"
 $ when "2pm in 2 days in new delhi
+$ when "now in yyz -> sfo -> vie -> lhr"
 ```
 
 ## Usage

@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::fmt;
 
 use anyhow::{bail, Error};
 use chrono_tz::Tz;
@@ -25,6 +26,24 @@ pub struct Location {
 pub enum ZoneRef {
     Tz(Tz),
     Location(&'static Location),
+}
+
+impl fmt::Display for ZoneRef {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.kind() == ZoneKind::Timezone {
+            write!(f, "{}", self.name())
+        } else {
+            write!(f, "{}", self.name())?;
+            if let Some(code) = self.admin_code() {
+                write!(f, ", {}", code)?;
+            }
+            if let Some(country) = self.country() {
+                write!(f, "; ")?;
+                write!(f, "{}", country)?;
+            }
+            Ok(())
+        }
+    }
 }
 
 impl ZoneRef {

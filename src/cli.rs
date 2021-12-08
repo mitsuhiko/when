@@ -88,11 +88,9 @@ pub fn execute() -> Result<(), anyhow::Error> {
     }
 
     if cli.short {
-        for (date, _) in to_info.iter() {
-            println!("{}", date.format("%Y-%m-%d %H:%M:%S %z"));
-        }
-        if to_info.is_empty() {
-            println!("{}", from.format("%Y-%m-%d %H:%M:%S %z"));
+        println!("{} ({})", from.format("%Y-%m-%d %H:%M:%S %z"), from_zone);
+        for (date, loc) in to_info.iter() {
+            println!("{} ({})", date.format("%Y-%m-%d %H:%M:%S %z"), loc);
         }
     } else {
         print_date(from, from_zone);

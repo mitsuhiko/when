@@ -5,6 +5,7 @@ All notable changes to `when` are documented here.
 ## 0.3.0
 
 - Added support for multiple target locations.
+- Added timezone name to short output.
 
 ## 0.2.0
 
