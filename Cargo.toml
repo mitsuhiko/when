@@ -1,6 +1,6 @@
 [package]
 name = "when-cli"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 authors = ["Armin Ronacher <armin.ronacher@active-4.com>"]
 license = "Apache-2.0"
