@@ -8,6 +8,7 @@ All notable changes to `when` are documented here.
 - Add support for colors.
 - Improved error message output.
 - Added week day output.
+- If no `to` zone is requested, the current local timezone is assumed if the timezones do not match.
 
 ## 0.1.0
 

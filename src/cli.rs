@@ -75,6 +75,12 @@ pub fn execute() -> Result<(), anyhow::Error> {
         let to_zone = find_zone(to_zone_ref)?;
         let to = from.with_timezone(&to_zone.tz());
         Some((to, to_zone))
+    } else if let Ok(to_zone) = find_zone("local") {
+        if to_zone.tz().name() != from_zone.tz().name() {
+            Some((from.with_timezone(&to_zone.tz()), to_zone))
+        } else {
+            None
+        }
     } else {
         None
     };
