@@ -24,7 +24,7 @@ use crate::parser::Expr;
 ///
 /// For more examples see https://github.com/mitsuhiko/when
 #[derive(Parser)]
-#[clap(version = clap::crate_version!())]
+#[clap(version = clap::crate_version!(), max_term_width = 100)]
 struct Cli {
     /// use short output.
     ///

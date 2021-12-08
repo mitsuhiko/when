@@ -17,7 +17,7 @@ path = "src/main.rs"
 anyhow = "1.0.51"
 chrono = { version = "0.4.19", features = ["serde"] }
 chrono-tz = "0.6.1"
-clap = { version = "3.0.0-beta.5", features = ["color"] }
+clap = { version = "3.0.0-rc.0", features = ["color", "derive", "cargo", "wrap_help"] }
 console = "0.15.0"
 localzone = "0.1.0"
 pest = "2.1.3"
