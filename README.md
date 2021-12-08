@@ -3,18 +3,7 @@
 `when` is a small utility which tells you what time it is
 somewhere or what some time is somewhere.
 
-```
-$ when "5pm in vienna -> san francisco"
-time: 17:00:00
-date: 2021-12-08 (Wednesday)
-location: Vienna (Austria)
-zone: Europe/Vienna (+0100)
-
-time: 08:00:00
-date: 2021-12-08 (Wednesday)
-location: San Francisco (CA; United States)
-zone: America/Los_Angeles (-0800)
-```
+<img src="https://raw.githubusercontent.com/mitsuhiko/when/main/when/assets/hello.png" alt="example" width="500">
 
 ## Installation
 
