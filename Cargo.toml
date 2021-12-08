@@ -22,3 +22,8 @@ console = "0.15.0"
 localzone = "0.1.0"
 pest = "2.1.3"
 pest_derive = "2.1.0"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
