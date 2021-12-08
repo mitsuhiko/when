@@ -71,8 +71,7 @@ pub struct DateParser;
 pub struct Expr<'a> {
     time_spec: Option<TimeSpec>,
     date_spec: Option<DateSpec>,
-    location: Option<&'a str>,
-    to_location: Option<&'a str>,
+    locations: Vec<&'a str>,
 }
 
 impl<'a> Expr<'a> {
@@ -83,12 +82,12 @@ impl<'a> Expr<'a> {
 
     /// Returns the location if available.
     pub fn location(&self) -> Option<&str> {
-        self.location
+        self.locations.get(0).copied()
     }
 
-    /// Returns the target location if available.
-    pub fn to_location(&self) -> Option<&str> {
-        self.to_location
+    /// Returns the target locations if available.
+    pub fn to_locations(&self) -> &[&str] {
+        self.locations.get(1..).unwrap_or_default()
     }
 
     /// Applies the expression to a current reference date.
@@ -183,18 +182,17 @@ fn parse_input(expr: &str) -> Result<Expr<'_>, DateParseError> {
     let mut rv = Expr {
         time_spec: None,
         date_spec: None,
-        location: None,
-        to_location: None,
+        locations: vec![],
     };
 
     for piece in pair.into_inner() {
         match piece.as_rule() {
             Rule::location => {
-                if let Some((from, to)) = piece.as_str().split_once("->") {
-                    rv.location = Some(from.trim_end());
-                    rv.to_location = Some(to.trim_start());
-                } else {
-                    rv.location = Some(piece.as_str());
+                for loc in piece.as_str().split("->") {
+                    let loc = loc.trim();
+                    if !loc.is_empty() {
+                        rv.locations.push(loc);
+                    }
                 }
             }
             Rule::abs_time => {

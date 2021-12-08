@@ -2,6 +2,10 @@
 
 All notable changes to `when` are documented here.
 
+## 0.3.0
+
+- Added support for multiple target locations.
+
 ## 0.2.0
 
 - Fixed an issue where admin code was same as country code.

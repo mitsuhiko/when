@@ -71,26 +71,32 @@ pub fn execute() -> Result<(), anyhow::Error> {
     let now = Utc::now().with_timezone(&from_zone.tz());
     let from = expr.apply(now);
 
-    let to = if let Some(to_zone_ref) = expr.to_location() {
+    let mut to_info = vec![];
+
+    for to_zone_ref in expr.to_locations() {
         let to_zone = find_zone(to_zone_ref)?;
         let to = from.with_timezone(&to_zone.tz());
-        Some((to, to_zone))
-    } else if let Ok(to_zone) = find_zone("local") {
-        if to_zone.tz().name() != from_zone.tz().name() {
-            Some((from.with_timezone(&to_zone.tz()), to_zone))
-        } else {
-            None
+        to_info.push((to, to_zone));
+    }
+
+    if to_info.is_empty() {
+        if let Ok(to_zone) = find_zone("local") {
+            if to_zone.tz().name() != from_zone.tz().name() {
+                to_info.push((from.with_timezone(&to_zone.tz()), to_zone));
+            }
         }
-    } else {
-        None
-    };
+    }
 
     if cli.short {
-        let date = to.as_ref().map(|x| x.0).unwrap_or(from);
-        println!("{}", date.format("%Y-%m-%d %H:%M:%S %z"));
+        for (date, _) in to_info.iter() {
+            println!("{}", date.format("%Y-%m-%d %H:%M:%S %z"));
+        }
+        if to_info.is_empty() {
+            println!("{}", from.format("%Y-%m-%d %H:%M:%S %z"));
+        }
     } else {
         print_date(from, from_zone);
-        if let Some((to, to_zone)) = to {
+        for (to, to_zone) in to_info {
             println!();
             print_date(to, to_zone);
         }
