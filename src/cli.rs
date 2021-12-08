@@ -1,3 +1,5 @@
+use std::fmt;
+
 use anyhow::bail;
 use chrono::{DateTime, Utc};
 use chrono_tz::Tz;
@@ -40,43 +42,15 @@ struct Cli {
     #[clap(long = "json")]
     json: bool,
 
+    /// returns a list of all known IANA/Olson timezones.
+    #[clap(long = "list-timezones")]
+    list_timezones: bool,
+
     /// the input expression to evaluate.
     ///
     /// If this is not supplied then "now" is assumed to return the time
     /// in the current timezone.
     expr: Option<String>,
-}
-
-fn print_date(date: DateTime<Tz>, zone: ZoneRef) {
-    let adjusted = date.with_timezone(&zone.tz());
-    println!("time: {}", style(adjusted.format("%H:%M:%S")).bold().cyan());
-    println!(
-        "date: {} ({})",
-        style(adjusted.format("%Y-%m-%d")).yellow(),
-        style(adjusted.format("%A")),
-    );
-    if zone.kind() != ZoneKind::Timezone {
-        print!("location: {}", style(zone.name()).green());
-        print!(" (");
-        let mut with_code = false;
-        if let Some(code) = zone.admin_code() {
-            print!("{}", code);
-            with_code = true;
-        }
-        if let Some(country) = zone.country() {
-            if with_code {
-                print!("; ");
-            }
-            print!("{}", country);
-        }
-        print!(")");
-        println!();
-    }
-    println!(
-        "zone: {} ({})",
-        style(zone.tz().name()).underlined(),
-        adjusted.format("%z")
-    );
 }
 
 pub struct JsonLocation<'a>(&'a ZoneRef);
@@ -115,6 +89,68 @@ impl<'a> Serialize for JsonEntry<'a> {
     }
 }
 
+pub struct ZoneOffset(DateTime<Tz>);
+
+impl fmt::Display for ZoneOffset {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let abbrev = self.0.format("%Z").to_string();
+        if abbrev.chars().all(|x| x.is_ascii_alphabetic()) {
+            write!(f, "{}; {}", abbrev, self.0.format("%z"))?
+        } else {
+            write!(f, "{}", self.0.format("%z"))?
+        }
+        Ok(())
+    }
+}
+
+fn print_date(date: DateTime<Tz>, zone: ZoneRef) {
+    let adjusted = date.with_timezone(&zone.tz());
+    println!("time: {}", style(adjusted.format("%H:%M:%S")).bold().cyan());
+    println!(
+        "date: {} ({})",
+        style(adjusted.format("%Y-%m-%d")).yellow(),
+        style(adjusted.format("%A")),
+    );
+    if zone.kind() != ZoneKind::Timezone {
+        print!("location: {}", style(zone.name()).green());
+        print!(" (");
+        let mut with_code = false;
+        if let Some(code) = zone.admin_code() {
+            print!("{}", code);
+            with_code = true;
+        }
+        if let Some(country) = zone.country() {
+            if with_code {
+                print!("; ");
+            }
+            print!("{}", country);
+        }
+        print!(")");
+        println!();
+    }
+    println!(
+        "zone: {} ({})",
+        style(zone.tz().name()).underlined(),
+        ZoneOffset(adjusted),
+    );
+}
+
+fn list_timezones() -> Result<(), anyhow::Error> {
+    let now = Utc::now();
+    let mut zone_list = Vec::new();
+    for zone in chrono_tz::TZ_VARIANTS {
+        let there = now.with_timezone(&zone);
+        zone_list.push((zone, there));
+    }
+    zone_list.sort_by_key(|x| x.0.name());
+
+    for (zone, there) in zone_list {
+        println!("{} ({})", zone.name(), ZoneOffset(there));
+    }
+
+    Ok(())
+}
+
 pub fn execute() -> Result<(), anyhow::Error> {
     let cli = Cli::parse();
 
@@ -124,6 +160,10 @@ pub fn execute() -> Result<(), anyhow::Error> {
         Some("never") => console::set_colors_enabled(false),
         Some(other) => bail!("unknown value for --colors ({})", other),
     };
+
+    if cli.list_timezones {
+        return list_timezones();
+    }
 
     let expr = Expr::parse(cli.expr.as_deref().unwrap_or("now"))?;
     let zone_ref = expr.location().unwrap_or("local");

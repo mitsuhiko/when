@@ -7,6 +7,8 @@ All notable changes to `when` are documented here.
 - Added support for multiple target locations.
 - Added timezone name to short output.
 - Added `--json` flag to enable JSON output.
+- Added timezone abbreviations to output.
+- Added `--list-timezones` option.
 
 ## 0.2.0
 
