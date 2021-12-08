@@ -3,7 +3,9 @@
 `when` is a small utility which tells you what time it is
 somewhere or what some time is somewhere.
 
-<img src="https://raw.githubusercontent.com/mitsuhiko/when/main/when/assets/hello.png" alt="example" width="500">
+<p align="center">
+  <img src="https://raw.githubusercontent.com/mitsuhiko/when/main/assets/hello.png" alt="example" width="500">
+</p>
 
 ## Installation
 
