@@ -1,26 +1,44 @@
 use anyhow::bail;
-use argh::FromArgs;
 use chrono::{DateTime, Utc};
 use chrono_tz::Tz;
+use clap::Parser;
 use console::style;
 
 use crate::location::{find_zone, ZoneKind, ZoneRef};
 use crate::parser::Expr;
 
 /// A small utility to convert times from the command line.
-#[derive(FromArgs)]
+///
+/// When takes a time and date expression and helps converting it into
+/// different timezones.  If no arguments are supplied the current time
+/// in the current location is returned.
+///
+/// The basic syntax for the expression is "time_spec [in location_spec]".
+/// Translations between locations is done by using the "->" operator.
+///
+/// For instance "2pm in vie -> yyz" takes 14:00 in vienna time and
+/// translates it to toronto (airport).  It then prints out both
+/// timestamps on stdout with additional information.
+///
+/// For more examples see https://github.com/mitsuhiko/when
+#[derive(Parser)]
+#[clap(version = clap::crate_version!())]
 struct Cli {
     /// use short output.
-    #[argh(switch, short = 's')]
+    ///
+    /// When short output is enabled one line per timezone is returned.
+    #[clap(short = 's', long = "short")]
     short: bool,
 
     /// controls when to use colors. Choices are `auto`, `never`, `always`.
-    #[argh(option, long = "colors")]
+    #[clap(long = "colors")]
     colors: Option<String>,
 
-    /// the input expression to evaluate
-    #[argh(positional)]
-    expr: String,
+    /// the input expression to evaluate.
+    ///
+    /// If this is not supplied then "now" is assumed to return the time
+    /// in the current timezone.
+    expr: Option<String>,
 }
 
 fn print_date(date: DateTime<Tz>, zone: ZoneRef) {
@@ -56,7 +74,7 @@ fn print_date(date: DateTime<Tz>, zone: ZoneRef) {
 }
 
 pub fn execute() -> Result<(), anyhow::Error> {
-    let cli: Cli = argh::from_env();
+    let cli = Cli::parse();
 
     match cli.colors.as_deref() {
         None | Some("auto") => {}
@@ -65,7 +83,7 @@ pub fn execute() -> Result<(), anyhow::Error> {
         Some(other) => bail!("unknown value for --colors ({})", other),
     };
 
-    let expr = Expr::parse(&cli.expr)?;
+    let expr = Expr::parse(cli.expr.as_deref().unwrap_or("now"))?;
     let zone_ref = expr.location().unwrap_or("local");
     let from_zone = find_zone(&zone_ref)?;
     let now = Utc::now().with_timezone(&from_zone.tz());
