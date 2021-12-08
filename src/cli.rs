@@ -1,7 +1,7 @@
 use std::fmt;
 
 use anyhow::bail;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Timelike, Utc};
 use chrono_tz::Tz;
 use clap::Parser;
 use console::style;
@@ -103,16 +103,44 @@ impl fmt::Display for ZoneOffset {
     }
 }
 
+pub struct TimeOfDay(DateTime<Tz>);
+
+impl fmt::Display for TimeOfDay {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.0.hour() {
+            5 => write!(f, "early morning"),
+            6..=8 => write!(f, "morning"),
+            9..=11 => write!(f, "late morning"),
+            12 => write!(f, "noon"),
+            13..=16 => write!(f, "afternoon"),
+            17..=18 => write!(f, "early evening"),
+            19..=20 => write!(f, "evening"),
+            21..=22 => write!(f, "late evening"),
+            23 | 0..=4 => write!(f, "night"),
+            24.. => unreachable!(),
+        }
+    }
+}
+
 fn print_date(date: DateTime<Tz>, zone: ZoneRef) {
     let adjusted = date.with_timezone(&zone.tz());
-    println!("time: {}", style(adjusted.format("%H:%M:%S")).bold().cyan());
+    println!(
+        "time: {} ({})",
+        style(adjusted.format("%H:%M:%S")).bold().cyan(),
+        TimeOfDay(adjusted)
+    );
     println!(
         "date: {} ({})",
         style(adjusted.format("%Y-%m-%d")).yellow(),
         style(adjusted.format("%A")),
     );
+    println!(
+        "zone: {} ({})",
+        style(zone.tz().name()).underlined(),
+        ZoneOffset(adjusted),
+    );
     if zone.kind() != ZoneKind::Timezone {
-        print!("location: {}", style(zone.name()).green());
+        print!("location: {}", style(zone.name()).bold());
         print!(" (");
         let mut with_code = false;
         if let Some(code) = zone.admin_code() {
@@ -128,11 +156,6 @@ fn print_date(date: DateTime<Tz>, zone: ZoneRef) {
         print!(")");
         println!();
     }
-    println!(
-        "zone: {} ({})",
-        style(zone.tz().name()).underlined(),
-        ZoneOffset(adjusted),
-    );
 }
 
 fn list_timezones() -> Result<(), anyhow::Error> {
