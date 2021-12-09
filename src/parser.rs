@@ -1,12 +1,14 @@
 use std::fmt;
 use std::ops::Add;
 
-use chrono::{DateTime, Datelike, Duration, Timelike};
+use chrono::{DateTime, Datelike, Duration, NaiveDateTime, Timelike};
 use chrono_tz::Tz;
 use pest::error::ErrorVariant;
 use pest::iterators::Pair;
 use pest::Parser;
 use pest_derive::Parser;
+
+use crate::location::find_zone;
 
 #[derive(Debug)]
 pub enum DateParseError {
@@ -184,6 +186,7 @@ fn parse_input(expr: &str) -> Result<Expr<'_>, DateParseError> {
         date_spec: None,
         locations: vec![],
     };
+    let mut unix_time = false;
 
     for piece in pair.into_inner() {
         match piece.as_rule() {
@@ -194,6 +197,21 @@ fn parse_input(expr: &str) -> Result<Expr<'_>, DateParseError> {
                         rv.locations.push(loc);
                     }
                 }
+            }
+            Rule::unix_time => {
+                let ts: i64 = piece.into_inner().next().unwrap().as_str().parse().unwrap();
+                let dt = NaiveDateTime::from_timestamp(ts, 0);
+                rv.time_spec = Some(TimeSpec::Abs {
+                    hour: dt.hour() as _,
+                    minute: dt.minute() as _,
+                    second: dt.second() as _,
+                });
+                rv.date_spec = Some(DateSpec::Abs {
+                    day: dt.day() as _,
+                    month: Some(dt.month() as _),
+                    year: Some(dt.year() as _),
+                });
+                unix_time = true;
             }
             Rule::abs_time => {
                 let mut now = false;
@@ -385,6 +403,14 @@ fn parse_input(expr: &str) -> Result<Expr<'_>, DateParseError> {
                 });
             }
             _ => unreachable!(),
+        }
+    }
+
+    // if unix time is used there is always an implied utc location
+    // as this is the main thing that makes sense with unix timestamps
+    if unix_time {
+        if rv.locations.is_empty() || !find_zone(rv.locations[0]).map_or(false, |x| x.is_utc()) {
+            rv.locations.insert(0, "utc");
         }
     }
 

@@ -1,6 +1,9 @@
 WHITESPACE = _{ WHITE_SPACE }
 
-spec = ${ (neg_rel_time | abs_time | rel_time) ~ (WHITE_SPACE+ ~ ^"in" ~ WHITE_SPACE+ ~ location)? }
+spec = ${
+    (unix_time ~ WHITE_SPACE* ~ ^"->" ~ WHITE_SPACE* ~ location) |
+    ((neg_rel_time | abs_time | rel_time | unix_time) ~ (WHITE_SPACE+ ~ ^"in" ~ WHITE_SPACE+ ~ location)?)
+}
 
 number = { ASCII_DIGIT+ }
 abs_time = { time ~ (WHITE_SPACE+ ~ (^"on" ~ WHITE_SPACE+)? ~ date)? | date ~ WHITE_SPACE+ ~ time }
@@ -10,6 +13,7 @@ neg_rel_time = ${ rel_time_spec ~ (WHITE_SPACE+ ~ ^"and" ~ WHITE_SPACE+ ~ rel_ti
 rel_hours = { number ~ WHITE_SPACE* ~ (^"hours" | ^"hour" | ^"h") }
 rel_minutes = { number ~ WHITE_SPACE* ~ (^"minutes" | ^"mins" | ^"min" | ^"m") }
 rel_seconds = { number ~ WHITE_SPACE* ~ (^"seconds" | ^ "secs" | ^"sec" | ^"s") }
+unix_time = { (^"unix:" ~ WHITE_SPACE* | ^"unix" ~ WHITE_SPACE+) ~ number }
 
 time = { time_special | time12 | time24 }
 location = @{ (LETTER | NUMBER | MARK | SEPARATOR | PUNCTUATION | SYMBOL | WHITE_SPACE)+ }

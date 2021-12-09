@@ -29,6 +29,7 @@ $ when "4pm yesterday in vienna -> vienna va"
 $ when "in 4 hours in san francisco"
 $ when "2pm in 2 days in new delhi
 $ when "now in yyz -> sfo -> vie -> lhr"
+$ when "unix 1639067620 in tokyo"
 ```
 
 ## Usage
@@ -52,6 +53,7 @@ Time and date can be provided roughly like this:
 * `17:00 on 20.05.` (DD.MM.)
 * `17:00 on 20.05.2020` (DD.MM.YYYY)
 * relative times (`in 4 hours` or `4 hours ago`)
+* unix timestamps (`unix:TS` or `unix TS`)
 
 For locations many major cities are supported as well as
 common timezone names like `Europe/Vienna`.

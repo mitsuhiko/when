@@ -54,6 +54,20 @@ impl ZoneRef {
         }
     }
 
+    pub fn is_utc(&self) -> bool {
+        matches!(
+            self.tz().name(),
+            "Universal"
+                | "UTC"
+                | "UCT"
+                | "Zulu"
+                | "Etc/Universal"
+                | "Etc/UCT"
+                | "Etc/UTC"
+                | "Etc/Zulu"
+        )
+    }
+
     pub fn kind(&self) -> ZoneKind {
         match self {
             ZoneRef::Tz(_) => ZoneKind::Timezone,

@@ -2,6 +2,10 @@
 
 All notable changes to `when` are documented here.
 
+## 0.4.0
+
+- Added `unix:` syntax to support timestamps.
+
 ## 0.3.0
 
 - Added support for multiple target locations.
