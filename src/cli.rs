@@ -192,7 +192,7 @@ pub fn execute() -> Result<(), anyhow::Error> {
     let zone_ref = expr.location().unwrap_or("local");
     let from_zone = find_zone(&zone_ref)?;
     let now = Utc::now().with_timezone(&from_zone.tz());
-    let from = expr.apply(now);
+    let from = expr.apply(now)?;
 
     let mut to_info = vec![];
 

@@ -14,6 +14,7 @@ use crate::location::find_zone;
 pub enum DateParseError {
     Parser(pest::error::Error<Rule>),
     Garbage(String),
+    OutOfRange(&'static str),
 }
 
 impl std::error::Error for DateParseError {}
@@ -60,6 +61,9 @@ impl fmt::Display for DateParseError {
             DateParseError::Garbage(leftover) => {
                 write!(f, "invalid syntax (unsure how to interpret {:?})", leftover)
             }
+            DateParseError::OutOfRange(context) => {
+                write!(f, "{} out of range", context)
+            }
         }
     }
 }
@@ -93,7 +97,7 @@ impl<'a> Expr<'a> {
     }
 
     /// Applies the expression to a current reference date.
-    pub fn apply(&self, mut date: DateTime<Tz>) -> DateTime<Tz> {
+    pub fn apply(&self, mut date: DateTime<Tz>) -> Result<DateTime<Tz>, DateParseError> {
         match self.time_spec {
             Some(TimeSpec::Abs {
                 hour,
@@ -121,12 +125,18 @@ impl<'a> Expr<'a> {
         }
         match self.date_spec {
             Some(DateSpec::Abs { day, month, year }) => {
-                date = date.with_day(day as u32).unwrap();
+                date = date
+                    .with_day(day as u32)
+                    .ok_or_else(|| DateParseError::OutOfRange("day"))?;
                 if let Some(month) = month {
-                    date = date.with_month(month as u32).unwrap();
+                    date = date
+                        .with_month(month as u32)
+                        .ok_or_else(|| DateParseError::OutOfRange("month"))?;
                 }
                 if let Some(year) = year {
-                    date = date.with_year(year).unwrap();
+                    date = date
+                        .with_year(year)
+                        .ok_or_else(|| DateParseError::OutOfRange("year"))?;
                 }
             }
             Some(DateSpec::Rel { days }) => {
@@ -134,7 +144,7 @@ impl<'a> Expr<'a> {
             }
             None => {}
         }
-        date
+        Ok(date)
     }
 }
 
@@ -200,7 +210,8 @@ fn parse_input(expr: &str) -> Result<Expr<'_>, DateParseError> {
             }
             Rule::unix_time => {
                 let ts: i64 = piece.into_inner().next().unwrap().as_str().parse().unwrap();
-                let dt = NaiveDateTime::from_timestamp(ts, 0);
+                let dt = NaiveDateTime::from_timestamp_opt(ts, 0)
+                    .ok_or_else(|| DateParseError::OutOfRange("unix timestamp"))?;
                 rv.time_spec = Some(TimeSpec::Abs {
                     hour: dt.hour() as _,
                     minute: dt.minute() as _,
