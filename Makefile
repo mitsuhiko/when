@@ -3,6 +3,9 @@ all: build
 build:
 	@(cd cli; cargo build --all-features)
 
+test:
+	@cargo test --all
+
 release:
 	@(cd cli; cargo build --release)
 

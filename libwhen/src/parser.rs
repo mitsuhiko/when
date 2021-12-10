@@ -51,11 +51,11 @@ impl fmt::Display for DateParseError {
                         (false, false) => write!(
                             f,
                             "unexpected {}; expected {}",
-                            Enumerate(&negatives),
-                            Enumerate(&positives)
+                            Enumerate(negatives),
+                            Enumerate(positives)
                         )?,
-                        (false, true) => write!(f, "unexpected {}", Enumerate(&negatives))?,
-                        (true, false) => write!(f, "expected {}", Enumerate(&positives))?,
+                        (false, true) => write!(f, "unexpected {}", Enumerate(negatives))?,
+                        (true, false) => write!(f, "expected {}", Enumerate(positives))?,
                         (true, true) => write!(f, "unknown parsing error")?,
                     },
                     ErrorVariant::CustomError { message } => write!(f, "{}", message)?,
@@ -182,7 +182,7 @@ impl<'a> InputExpr<'a> {
     /// Resolves the expression into all referenced locations.
     pub fn process(&self) -> Result<Vec<TimeAtLocation>, DateParseError> {
         let zone_ref = self.location().unwrap_or("local");
-        let from_zone = find_zone(&zone_ref)
+        let from_zone = find_zone(zone_ref)
             .ok_or_else(|| DateParseError::MissingLocation(zone_ref.to_string()))?;
         let now = Utc::now().with_timezone(&from_zone.tz());
         let from = self.apply(now)?;
@@ -247,16 +247,16 @@ impl<'a> InputExpr<'a> {
             Some(DateSpec::Abs { day, month, year }) => {
                 date = date
                     .with_day(day as u32)
-                    .ok_or_else(|| DateParseError::OutOfRange("day"))?;
+                    .ok_or(DateParseError::OutOfRange("day"))?;
                 if let Some(month) = month {
                     date = date
                         .with_month(month as u32)
-                        .ok_or_else(|| DateParseError::OutOfRange("month"))?;
+                        .ok_or(DateParseError::OutOfRange("month"))?;
                 }
                 if let Some(year) = year {
                     date = date
                         .with_year(year)
-                        .ok_or_else(|| DateParseError::OutOfRange("year"))?;
+                        .ok_or(DateParseError::OutOfRange("year"))?;
                 }
             }
             Some(DateSpec::Rel { days }) => {
@@ -331,7 +331,7 @@ fn parse_input(expr: &str) -> Result<InputExpr<'_>, DateParseError> {
             Rule::unix_time => {
                 let ts: i64 = piece.into_inner().next().unwrap().as_str().parse().unwrap();
                 let dt = NaiveDateTime::from_timestamp_opt(ts, 0)
-                    .ok_or_else(|| DateParseError::OutOfRange("unix timestamp"))?;
+                    .ok_or(DateParseError::OutOfRange("unix timestamp"))?;
                 rv.time_spec = Some(TimeSpec::Abs {
                     hour: dt.hour() as _,
                     minute: dt.minute() as _,
@@ -539,10 +539,10 @@ fn parse_input(expr: &str) -> Result<InputExpr<'_>, DateParseError> {
 
     // if unix time is used there is always an implied utc location
     // as this is the main thing that makes sense with unix timestamps
-    if unix_time {
-        if rv.locations.is_empty() || !find_zone(rv.locations[0]).map_or(false, |x| x.is_utc()) {
-            rv.locations.insert(0, "utc");
-        }
+    if unix_time && rv.locations.is_empty()
+        || !find_zone(rv.locations[0]).map_or(false, |x| x.is_utc())
+    {
+        rv.locations.insert(0, "utc");
     }
 
     Ok(rv)
