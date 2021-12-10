@@ -1,10 +1,10 @@
-name: Tests
+name: WASM Build
 
 on: [push]
 
 jobs:
   build-latest:
-    name: Test on Latest
+    name: WASM  on Latest
     runs-on: ubuntu-latest
 
     steps:
@@ -14,5 +14,6 @@ jobs:
           toolchain: stable
           profile: minimal
           override: true
-      - name: Test
-        run: make test
+      - uses: jetli/wasm-pack-action@v0.3.0
+      - name: Build
+        run: make web-dist
