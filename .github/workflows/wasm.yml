@@ -18,4 +18,4 @@ jobs:
           override: true
       - uses: jetli/wasm-pack-action@v0.3.0
       - name: Build
-        run: make web-dist
+        run: (cd web/www; npm ci) && make web-dist
