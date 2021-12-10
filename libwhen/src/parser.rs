@@ -539,8 +539,8 @@ fn parse_input(expr: &str) -> Result<InputExpr<'_>, DateParseError> {
 
     // if unix time is used there is always an implied utc location
     // as this is the main thing that makes sense with unix timestamps
-    if unix_time && rv.locations.is_empty()
-        || !find_zone(rv.locations[0]).map_or(false, |x| x.is_utc())
+    if unix_time
+        && (rv.locations.is_empty() || !find_zone(rv.locations[0]).map_or(false, |x| x.is_utc()))
     {
         rv.locations.insert(0, "utc");
     }
