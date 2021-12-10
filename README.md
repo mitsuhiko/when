@@ -15,6 +15,9 @@ Conveniently via cargo:
 $ cargo install when-cli
 ```
 
+There is also an [online version](https://mitsuhiko.github.io/when/) you can use
+from your browser.
+
 ## Examples
 
 These are some other things you can do:
