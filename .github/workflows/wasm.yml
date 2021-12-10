@@ -27,3 +27,5 @@ jobs:
         with:
           branch: gh-pages
           folder: web/www/dist
+          single-commit: true
+          clean: true
