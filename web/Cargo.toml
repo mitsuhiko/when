@@ -1,0 +1,32 @@
+[package]
+name = "when-web"
+version = "0.1.0"
+authors = ["Armin Ronacher <armin.ronacher@active-4.com>"]
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["console_error_panic_hook"]
+
+[dependencies]
+wasm-bindgen = "0.2.63"
+console_error_panic_hook = { version = "0.1.6", optional = true }
+wee_alloc = { version = "0.4.5", optional = true }
+libwhen = { path = "../libwhen" }
+chrono = { version = "0.4.19", features = ["wasmbind", "js-sys"] }
+serde_json = "1.0.72"
+serde = { version = "1.0.131", features = ["derive"] }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.13"
+
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+opt-level = "s"
+
+[workspace]
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false

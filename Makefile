@@ -21,4 +21,13 @@ lint:
 	@rustup component add clippy 2> /dev/null
 	@cargo clippy
 
-.PHONY: all test format format-check lint clean-data build release
+web-dev:
+	@cd web; wasm-pack build
+	@cd web/www; npm run start
+
+web-dist:
+	@rm -rf web/www/dist
+	@cd web; wasm-pack build --release
+	@cd web/www; npm run build
+
+.PHONY: all test format format-check lint clean-data build release web-dev web-dist
