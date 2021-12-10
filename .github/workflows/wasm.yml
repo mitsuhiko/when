@@ -1,6 +1,9 @@
 name: WASM Build
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   build-latest:
@@ -18,4 +21,9 @@ jobs:
           override: true
       - uses: jetli/wasm-pack-action@v0.3.0
       - name: Build
-        run: (cd web/www; npm ci) && make web-dist
+        run: (cd web/www; npm ci) && make web-dist && touch web/www/dist/.nojekyll
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@4.1.7
+        with:
+          branch: gh-pages
+          folder: web/www/dist
