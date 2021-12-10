@@ -1,20 +1,25 @@
 use std::fmt;
 use std::ops::Add;
 
-use chrono::{DateTime, Datelike, Duration, NaiveDateTime, Timelike};
+use chrono::{DateTime, Datelike, Duration, NaiveDateTime, Timelike, Utc};
 use chrono_tz::Tz;
 use pest::error::ErrorVariant;
 use pest::iterators::Pair;
 use pest::Parser;
 use pest_derive::Parser;
+use serde::ser::SerializeMap;
+use serde::{Serialize, Serializer};
 
-use crate::location::find_zone;
+use crate::location::{find_zone, LocationKind, ZoneRef};
+use crate::utils::get_time_of_day;
 
+/// Represents a parsing error.
 #[derive(Debug)]
 pub enum DateParseError {
     Parser(pest::error::Error<Rule>),
     Garbage(String),
     OutOfRange(&'static str),
+    MissingLocation(String),
 }
 
 impl std::error::Error for DateParseError {}
@@ -64,25 +69,97 @@ impl fmt::Display for DateParseError {
             DateParseError::OutOfRange(context) => {
                 write!(f, "{} out of range", context)
             }
+            DateParseError::MissingLocation(loc) => {
+                write!(f, "unknown timezone '{}'", loc)
+            }
         }
     }
 }
 
 #[derive(Parser)]
 #[grammar = "date_grammar.pest"]
-pub struct DateParser;
+struct DateParser;
 
 /// Represents a human readable date expression
 #[derive(Debug)]
-pub struct Expr<'a> {
+pub struct InputExpr<'a> {
     time_spec: Option<TimeSpec>,
     date_spec: Option<DateSpec>,
     locations: Vec<&'a str>,
 }
 
-impl<'a> Expr<'a> {
+/// A tuple of time and location.
+#[derive(Debug)]
+pub struct TimeAtLocation {
+    datetime: DateTime<Tz>,
+    zone_ref: ZoneRef,
+}
+
+impl TimeAtLocation {
+    /// Returns the timestamp in the given location.
+    pub fn datetime(&self) -> DateTime<Tz> {
+        self.datetime
+    }
+
+    /// Returns the zone reference for the timestamp.
+    pub fn zone(&self) -> ZoneRef {
+        self.zone_ref
+    }
+}
+
+impl<'a> Serialize for TimeAtLocation {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut m = serializer.serialize_map(None)?;
+        m.serialize_entry("datetime", &self.datetime)?;
+        m.serialize_entry("time_of_day", &get_time_of_day(self.datetime))?;
+        m.serialize_entry("timezone", &SerializeZone(&self.zone_ref, &self.datetime))?;
+        if self.zone_ref.kind() != LocationKind::Timezone {
+            m.serialize_entry("location", &SerializeLocation(&self.zone_ref))?;
+        }
+        m.end()
+    }
+}
+
+pub struct SerializeZone<'a>(&'a ZoneRef, &'a DateTime<Tz>);
+
+impl<'a> Serialize for SerializeZone<'a> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut m = serializer.serialize_map(None)?;
+        m.serialize_entry("name", self.0.tz().name())?;
+        m.serialize_entry("abbrev", &self.1.format("%Z").to_string())?;
+        m.serialize_entry("utc_offset", &self.1.format("%z").to_string())?;
+        m.end()
+    }
+}
+
+pub struct SerializeLocation<'a>(&'a ZoneRef);
+
+impl<'a> Serialize for SerializeLocation<'a> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut m = serializer.serialize_map(None)?;
+        m.serialize_entry("name", self.0.name())?;
+        if let Some(admin_code) = self.0.admin_code() {
+            m.serialize_entry("admin_code", &admin_code)?;
+        }
+        if let Some(country) = self.0.country() {
+            m.serialize_entry("country", &country)?;
+        }
+        m.end()
+    }
+}
+
+impl<'a> InputExpr<'a> {
     /// Parses an expression from a string.
-    pub fn parse(value: &'a str) -> Result<Expr<'a>, DateParseError> {
+    pub fn parse(value: &'a str) -> Result<InputExpr<'a>, DateParseError> {
         parse_input(value)
     }
 
@@ -94,6 +171,49 @@ impl<'a> Expr<'a> {
     /// Returns the target locations if available.
     pub fn to_locations(&self) -> &[&str] {
         self.locations.get(1..).unwrap_or_default()
+    }
+
+    /// Is this relative time?
+    pub fn is_relative(&self) -> bool {
+        matches!(self.time_spec, None | Some(TimeSpec::Rel { .. }))
+            || matches!(self.date_spec, Some(DateSpec::Rel { .. }))
+    }
+
+    /// Resolves the expression into all referenced locations.
+    pub fn process(&self) -> Result<Vec<TimeAtLocation>, DateParseError> {
+        let zone_ref = self.location().unwrap_or("local");
+        let from_zone = find_zone(&zone_ref)
+            .ok_or_else(|| DateParseError::MissingLocation(zone_ref.to_string()))?;
+        let now = Utc::now().with_timezone(&from_zone.tz());
+        let from = self.apply(now)?;
+
+        let mut rv = vec![TimeAtLocation {
+            datetime: from,
+            zone_ref: from_zone,
+        }];
+
+        for to_zone_ref in self.to_locations() {
+            let to_zone = find_zone(to_zone_ref)
+                .ok_or_else(|| DateParseError::MissingLocation(to_zone_ref.to_string()))?;
+            let to = from.with_timezone(&to_zone.tz());
+            rv.push(TimeAtLocation {
+                datetime: to,
+                zone_ref: to_zone,
+            });
+        }
+
+        if rv.len() == 1 {
+            if let Some(to_zone) = find_zone("local") {
+                if to_zone.tz().name() != from_zone.tz().name() {
+                    rv.push(TimeAtLocation {
+                        datetime: from.with_timezone(&to_zone.tz()),
+                        zone_ref: to_zone,
+                    });
+                }
+            }
+        }
+
+        Ok(rv)
     }
 
     /// Applies the expression to a current reference date.
@@ -149,7 +269,7 @@ impl<'a> Expr<'a> {
 }
 
 #[derive(Debug)]
-pub enum TimeSpec {
+enum TimeSpec {
     Abs {
         hour: i32,
         minute: i32,
@@ -163,7 +283,7 @@ pub enum TimeSpec {
 }
 
 #[derive(Debug)]
-pub enum DateSpec {
+enum DateSpec {
     Abs {
         day: i32,
         month: Option<i32>,
@@ -178,7 +298,7 @@ fn as_int(pair: Pair<Rule>) -> i32 {
     pair.into_inner().next().unwrap().as_str().parse().unwrap()
 }
 
-fn parse_input(expr: &str) -> Result<Expr<'_>, DateParseError> {
+fn parse_input(expr: &str) -> Result<InputExpr<'_>, DateParseError> {
     let expr = expr.trim();
     let pair = DateParser::parse(Rule::spec, expr)
         .map_err(DateParseError::Parser)?
@@ -191,7 +311,7 @@ fn parse_input(expr: &str) -> Result<Expr<'_>, DateParseError> {
         ));
     }
 
-    let mut rv = Expr {
+    let mut rv = InputExpr {
         time_spec: None,
         date_spec: None,
         locations: vec![],

@@ -1,15 +1,12 @@
 use std::fmt;
 
 use anyhow::bail;
-use chrono::{DateTime, Timelike, Utc};
+use chrono::{DateTime, Utc};
 use chrono_tz::Tz;
 use clap::Parser;
 use console::style;
-use serde::ser::SerializeMap;
-use serde::{Serialize, Serializer};
 
-use crate::location::{find_zone, ZoneKind, ZoneRef};
-use crate::parser::Expr;
+use libwhen::{get_time_of_day, InputExpr, LocationKind, ZoneRef};
 
 /// A small utility to convert times from the command line.
 ///
@@ -53,42 +50,6 @@ struct Cli {
     expr: Option<String>,
 }
 
-pub struct JsonLocation<'a>(&'a ZoneRef);
-
-impl<'a> Serialize for JsonLocation<'a> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut m = serializer.serialize_map(None)?;
-        m.serialize_entry("name", self.0.name())?;
-        if let Some(admin_code) = self.0.admin_code() {
-            m.serialize_entry("admin_code", &admin_code)?;
-        }
-        if let Some(country) = self.0.country() {
-            m.serialize_entry("country", &country)?;
-        }
-        m.end()
-    }
-}
-
-pub struct JsonEntry<'a>(&'a DateTime<Tz>, &'a ZoneRef);
-
-impl<'a> Serialize for JsonEntry<'a> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut m = serializer.serialize_map(None)?;
-        m.serialize_entry("datetime", &self.0)?;
-        m.serialize_entry("timezone", self.1.tz().name())?;
-        if self.1.kind() != ZoneKind::Timezone {
-            m.serialize_entry("location", &JsonLocation(self.1))?;
-        }
-        m.end()
-    }
-}
-
 pub struct ZoneOffset(DateTime<Tz>);
 
 impl fmt::Display for ZoneOffset {
@@ -103,31 +64,12 @@ impl fmt::Display for ZoneOffset {
     }
 }
 
-pub struct TimeOfDay(DateTime<Tz>);
-
-impl fmt::Display for TimeOfDay {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.0.hour() {
-            5 => write!(f, "early morning"),
-            6..=8 => write!(f, "morning"),
-            9..=11 => write!(f, "late morning"),
-            12 => write!(f, "noon"),
-            13..=16 => write!(f, "afternoon"),
-            17..=18 => write!(f, "early evening"),
-            19..=20 => write!(f, "evening"),
-            21..=22 => write!(f, "late evening"),
-            23 | 0..=4 => write!(f, "night"),
-            24.. => unreachable!(),
-        }
-    }
-}
-
 fn print_date(date: DateTime<Tz>, zone: ZoneRef) {
     let adjusted = date.with_timezone(&zone.tz());
     println!(
         "time: {} ({})",
         style(adjusted.format("%H:%M:%S")).bold().cyan(),
-        TimeOfDay(adjusted)
+        get_time_of_day(adjusted)
     );
     println!(
         "date: {} ({})",
@@ -139,7 +81,7 @@ fn print_date(date: DateTime<Tz>, zone: ZoneRef) {
         style(zone.tz().name()).underlined(),
         ZoneOffset(adjusted),
     );
-    if zone.kind() != ZoneKind::Timezone {
+    if zone.kind() != LocationKind::Timezone {
         print!("location: {}", style(zone.name()).bold());
         print!(" (");
         let mut with_code = false;
@@ -188,46 +130,37 @@ pub fn execute() -> Result<(), anyhow::Error> {
         return list_timezones();
     }
 
-    let expr = Expr::parse(cli.expr.as_deref().unwrap_or("now"))?;
-    let zone_ref = expr.location().unwrap_or("local");
-    let from_zone = find_zone(&zone_ref)?;
-    let now = Utc::now().with_timezone(&from_zone.tz());
-    let from = expr.apply(now)?;
-
-    let mut to_info = vec![];
-
-    for to_zone_ref in expr.to_locations() {
-        let to_zone = find_zone(to_zone_ref)?;
-        let to = from.with_timezone(&to_zone.tz());
-        to_info.push((to, to_zone));
-    }
-
-    if to_info.is_empty() {
-        if let Ok(to_zone) = find_zone("local") {
-            if to_zone.tz().name() != from_zone.tz().name() {
-                to_info.push((from.with_timezone(&to_zone.tz()), to_zone));
-            }
-        }
-    }
+    let expr = InputExpr::parse(cli.expr.as_deref().unwrap_or("now"))?;
+    let timestamps = expr.process()?;
 
     if cli.json {
-        let mut entries = vec![JsonEntry(&from, &from_zone)];
-        for (date, loc) in to_info.iter() {
-            entries.push(JsonEntry(date, loc));
-        }
-        println!("{}", serde_json::to_string_pretty(&entries).unwrap());
+        println!("{}", serde_json::to_string_pretty(&timestamps).unwrap());
     } else if cli.short {
-        println!("{} ({})", from.format("%Y-%m-%d %H:%M:%S %z"), from_zone);
-        for (date, loc) in to_info.iter() {
-            println!("{} ({})", date.format("%Y-%m-%d %H:%M:%S %z"), loc);
+        for t in timestamps.iter() {
+            println!(
+                "{} ({})",
+                t.datetime().format("%Y-%m-%d %H:%M:%S %z"),
+                t.zone()
+            );
         }
     } else {
-        print_date(from, from_zone);
-        for (to, to_zone) in to_info {
-            println!();
-            print_date(to, to_zone);
+        for (idx, t) in timestamps.iter().enumerate() {
+            if idx > 0 {
+                println!();
+            }
+            print_date(t.datetime(), t.zone());
         }
     }
 
     Ok(())
+}
+
+fn main() {
+    match execute() {
+        Ok(()) => {}
+        Err(err) => {
+            eprintln!("error: {}", err);
+            std::process::exit(1);
+        }
+    }
 }

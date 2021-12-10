@@ -1,16 +1,13 @@
 all: build
 
 build:
-	@cargo build --all-features
+	@(cd cli; cargo build --all-features)
 
 release:
-	@cargo build --release
+	@(cd cli; cargo build --release)
 
 install:
-	@cargo install --path=.
-
-doc:
-	@cargo doc --all-features
+	@cargo install --path=./cli
 
 format:
 	@rustup component add rustfmt 2> /dev/null
@@ -24,4 +21,4 @@ lint:
 	@rustup component add clippy 2> /dev/null
 	@cargo clippy
 
-.PHONY: all doc test format format-check lint clean-data build release
+.PHONY: all test format format-check lint clean-data build release

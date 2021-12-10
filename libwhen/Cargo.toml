@@ -1,0 +1,18 @@
+[package]
+name = "libwhen"
+version = "0.3.0"
+edition = "2021"
+authors = ["Armin Ronacher <armin.ronacher@active-4.com>"]
+license = "Apache-2.0"
+description = "a command line tool for converting times between timezones"
+repository = "https://github.com/mitsuhiko/when"
+keywords = ["timezone", "convert", "cli"]
+readme = "README.md"
+
+[dependencies]
+chrono = { version = "0.4.19", features = ["serde"] }
+chrono-tz = "0.6.1"
+localzone = "0.2.0"
+pest = "2.1.3"
+pest_derive = "2.1.0"
+serde = { version = "1.0.131", features = ["derive"] }

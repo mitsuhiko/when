@@ -1,27 +1,29 @@
 use std::borrow::Cow;
 use std::fmt;
 
-use anyhow::{bail, Error};
 use chrono_tz::Tz;
 
+/// The type of location.
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub enum ZoneKind {
+pub enum LocationKind {
     City,
     Timezone,
     Airport,
     Division,
 }
 
+/// Represents a timezone location.
 #[derive(Debug)]
 pub struct Location {
     pub(crate) name: &'static str,
     pub(crate) country: &'static str,
     pub(crate) admin_code: Option<&'static str>,
     pub(crate) aliases: &'static [&'static str],
-    pub(crate) kind: ZoneKind,
+    pub(crate) kind: LocationKind,
     pub(crate) tz: Tz,
 }
 
+/// Reference to a timezone.
 #[derive(Debug, Clone, Copy)]
 pub enum ZoneRef {
     Tz(Tz),
@@ -30,7 +32,7 @@ pub enum ZoneRef {
 
 impl fmt::Display for ZoneRef {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.kind() == ZoneKind::Timezone {
+        if self.kind() == LocationKind::Timezone {
             write!(f, "{}", self.name())
         } else {
             write!(f, "{}", self.name())?;
@@ -47,6 +49,10 @@ impl fmt::Display for ZoneRef {
 }
 
 impl ZoneRef {
+    /// Returns the name of the zone reference.
+    ///
+    /// For actual timezones that can be the IANA name, for cities
+    /// and airports this will be the actual name of the location.
     pub fn name(&self) -> &str {
         match self {
             ZoneRef::Tz(tz) => tz.name(),
@@ -54,6 +60,10 @@ impl ZoneRef {
         }
     }
 
+    /// True if this zone is the UTC zone.
+    ///
+    /// Note that this is different than checking if the zone is currently
+    /// at UTC+0.
     pub fn is_utc(&self) -> bool {
         matches!(
             self.tz().name(),
@@ -68,13 +78,15 @@ impl ZoneRef {
         )
     }
 
-    pub fn kind(&self) -> ZoneKind {
+    /// Returns the kind of location.
+    pub fn kind(&self) -> LocationKind {
         match self {
-            ZoneRef::Tz(_) => ZoneKind::Timezone,
+            ZoneRef::Tz(_) => LocationKind::Timezone,
             ZoneRef::Location(loc) => loc.kind,
         }
     }
 
+    /// If this zone reference points to a country, returns the country name.
     pub fn country(&self) -> Option<&str> {
         match self {
             ZoneRef::Tz(_) => None,
@@ -85,6 +97,9 @@ impl ZoneRef {
         }
     }
 
+    /// If the zone has an admin code returns it.
+    ///
+    /// For the US for instance this can be the name of the US state.
     pub fn admin_code(&self) -> Option<&str> {
         match self {
             ZoneRef::Tz(_) => None,
@@ -92,6 +107,7 @@ impl ZoneRef {
         }
     }
 
+    /// Returns a `chrono_tz` timezone object.
     pub fn tz(&self) -> Tz {
         match self {
             ZoneRef::Tz(tz) => *tz,
@@ -103,7 +119,7 @@ impl ZoneRef {
 include!(concat!(env!("OUT_DIR"), "/locations.rs"));
 
 /// Tries to locate a zone by name
-pub fn find_zone(name: &str) -> Result<ZoneRef, Error> {
+pub fn find_zone(name: &str) -> Option<ZoneRef> {
     let name = if name.eq_ignore_ascii_case("local") {
         match localzone::get_local_zone() {
             Some(zone) => Cow::Owned(zone),
@@ -116,7 +132,7 @@ pub fn find_zone(name: &str) -> Result<ZoneRef, Error> {
     let tz_name = name.replace(" ", "_");
     for tz in chrono_tz::TZ_VARIANTS {
         if tz.name().eq_ignore_ascii_case(&tz_name) {
-            return Ok(ZoneRef::Tz(tz));
+            return Some(ZoneRef::Tz(tz));
         }
     }
 
@@ -129,7 +145,7 @@ pub fn find_zone(name: &str) -> Result<ZoneRef, Error> {
                     && (x.country.eq_ignore_ascii_case(code)
                         || x.admin_code.map_or(false, |x| x.eq_ignore_ascii_case(code)))
             }) {
-                return Ok(ZoneRef::Location(rv));
+                return Some(ZoneRef::Location(rv));
             }
         }
     }
@@ -139,7 +155,7 @@ pub fn find_zone(name: &str) -> Result<ZoneRef, Error> {
         .find(|x| x.name.eq_ignore_ascii_case(&name))
         .map(ZoneRef::Location)
     {
-        return Ok(loc);
+        return Some(loc);
     }
 
     if name.len() == 3 {
@@ -148,9 +164,9 @@ pub fn find_zone(name: &str) -> Result<ZoneRef, Error> {
             .find(|x| x.aliases.iter().any(|x| x.eq_ignore_ascii_case(&name)))
             .map(ZoneRef::Location)
         {
-            return Ok(loc);
+            return Some(loc);
         }
     }
 
-    bail!("unknown time zone '{}'", name)
+    None
 }
