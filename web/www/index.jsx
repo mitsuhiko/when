@@ -61,8 +61,7 @@ function App() {
       <header>
         <h1>when?</h1>
         <a href="https://github.com/mitsuhiko/when">huh?</a>{' | '}
-        <a href="https://lucumr.pocoo.org/">who?</a>{' | '}
-        <a href="https://github.com/mitsuhiko/when">source!</a>
+        <a href="https://lucumr.pocoo.org/">who?</a>
       </header>
       <input
         type="text"
