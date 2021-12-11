@@ -1,20 +1,19 @@
-# when
+<img align="right" src="https://raw.githubusercontent.com/mitsuhiko/when/main/assets/hello.png" alt="example" width="460">
 
-<img align="right" src="https://raw.githubusercontent.com/mitsuhiko/when/main/assets/hello.png" alt="example" width="480">
+<div align="left">
+  <h3><em>when:</em> a timezone utility for the command line</h3>
+</div>
 
-`when` is a small utility which tells you what time it is
-somewhere or what some time is somewhere.  It takes human readable input like `now in vienna`
-or `now in san francisco -> toronto` and figures out the answer.
-
-It can be installed as a command line utility or [used online from the
-browser](https://mitsuhiko.github.io/when/).
-
-When takes a single argument which is a date and time expression.  In the most trivial
-case it looks something like this:
+[![Build Status](https://github.com/mitsuhiko/when/workflows/Tests/badge.svg?branch=main)](https://github.com/mitsuhiko/when/actions?query=workflow%3ATests)
+[![Crates.io](https://img.shields.io/crates/d/when-cli.svg)](https://crates.io/crates/when-cli)
+[![License](https://img.shields.io/github/license/mitsuhiko/when)](https://github.com/mitsuhiko/when/blob/main/LICENSE)
 
 ```
 $ when "now in vienna"
 ```
+
+`when` is a small utility which tells you what time it is somewhere or what some time is somewhere.
+You can use it from the command line or [uses it online from the browser](https://mitsuhiko.github.io/when/).
 
 **These are some input examples**:
 
@@ -28,8 +27,6 @@ $ when "now in vienna"
 * `2pm in 2 days in new delhi`
 * `now in yyz -> sfo -> vie -> lhr`
 * `unix 1639067620 in tokyo`
-
-<br clear="left">
 
 ## Installation
 
