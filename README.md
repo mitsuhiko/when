@@ -1,11 +1,15 @@
 # when
 
 `when` is a small utility which tells you what time it is
-somewhere or what some time is somewhere.
+somewhere or what some time is somewhere.  It takes human readable input like `now in vienna`
+or `now in san francisco -> toronto` and figures out the answer.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/mitsuhiko/when/main/assets/hello.png" alt="example" width="500">
 </p>
+
+It can be installed as a command line utility or [used online from the
+browser](https://mitsuhiko.github.io/when/).
 
 ## Installation
 
