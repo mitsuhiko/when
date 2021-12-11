@@ -1,6 +1,6 @@
 # when
 
-<img align="right" src="https://raw.githubusercontent.com/mitsuhiko/when/main/assets/hello.png" alt="example" width="500">
+<img align="right" src="https://raw.githubusercontent.com/mitsuhiko/when/main/assets/hello.png" alt="example" width="480">
 
 `when` is a small utility which tells you what time it is
 somewhere or what some time is somewhere.  It takes human readable input like `now in vienna`
@@ -9,20 +9,25 @@ or `now in san francisco -> toronto` and figures out the answer.
 It can be installed as a command line utility or [used online from the
 browser](https://mitsuhiko.github.io/when/).
 
-**These are some input examples**:
+When takes a single argument which is a date and time expression.  In the most trivial
+case it looks something like this:
 
 ```
-$ when "now"
-$ when "2 hours ago in yyz"
-$ when "5pm in yyz -> sfo"
-$ when "5pm in vienna -> london"
-$ when "4pm on 17.05.2021 in vienna -> tokyo"
-$ when "4pm yesterday in vienna -> vienna va"
-$ when "in 4 hours in san francisco"
-$ when "2pm in 2 days in new delhi
-$ when "now in yyz -> sfo -> vie -> lhr"
-$ when "unix 1639067620 in tokyo"
+$ when "now in vienna"
 ```
+
+**These are some input examples**:
+
+* `now`
+* `2 hours ago in yyz`
+* `5pm in yyz -> sfo`
+* `5pm in vienna -> london`
+* `4pm on 17.05.2021 in vienna -> tokyo`
+* `4pm yesterday in vienna -> vienna va`
+* `in 4 hours in san francisco`
+* `2pm in 2 days in new delhi`
+* `now in yyz -> sfo -> vie -> lhr`
+* `unix 1639067620 in tokyo`
 
 <br clear="left">
 
