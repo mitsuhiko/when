@@ -1,30 +1,15 @@
 # when
 
+<img align="right" src="https://raw.githubusercontent.com/mitsuhiko/when/main/assets/hello.png" alt="example" width="500">
+
 `when` is a small utility which tells you what time it is
 somewhere or what some time is somewhere.  It takes human readable input like `now in vienna`
 or `now in san francisco -> toronto` and figures out the answer.
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/mitsuhiko/when/main/assets/hello.png" alt="example" width="500">
-</p>
-
 It can be installed as a command line utility or [used online from the
 browser](https://mitsuhiko.github.io/when/).
 
-## Installation
-
-Conveniently via cargo:
-
-```
-$ cargo install when-cli
-```
-
-There is also an [online version](https://mitsuhiko.github.io/when/) you can use
-from your browser.
-
-## Examples
-
-These are some other things you can do:
+**These are some input examples**:
 
 ```
 $ when "now"
@@ -38,6 +23,19 @@ $ when "2pm in 2 days in new delhi
 $ when "now in yyz -> sfo -> vie -> lhr"
 $ when "unix 1639067620 in tokyo"
 ```
+
+<br clear="left">
+
+## Installation
+
+Conveniently via cargo:
+
+```
+$ cargo install when-cli
+```
+
+There is also an [online version](https://mitsuhiko.github.io/when/) you can use
+from your browser.
 
 ## Usage
 
@@ -62,5 +60,7 @@ Time and date can be provided roughly like this:
 * relative times (`in 4 hours` or `4 hours ago`)
 * unix timestamps (`unix:TS` or `unix TS`)
 
-For locations many major cities are supported as well as
-common timezone names like `Europe/Vienna`.
+For locations many major cities are supported as well as common timezone names
+like `Europe/Vienna`.  A certain amount of disambiugation is possible with city
+names.  For instance `Vienna VA` (Virginia) is different than `Vienna AT`
+(Austria).
