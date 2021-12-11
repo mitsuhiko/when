@@ -1,6 +1,6 @@
 [package]
 name = "when-cli"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 authors = ["Armin Ronacher <armin.ronacher@active-4.com>"]
 license = "Apache-2.0"
@@ -14,7 +14,7 @@ name = "when"
 path = "src/main.rs"
 
 [dependencies]
-libwhen = { path = "../libwhen" }
+libwhen = { version = "0.4.0", path = "../libwhen" }
 anyhow = "1.0.51"
 chrono = { version = "0.4.19", features = ["serde"] }
 chrono-tz = "0.6.1"
