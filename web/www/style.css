@@ -6,6 +6,8 @@ a {
 }
 a:hover {
   color: rgb(208, 145, 28);
+  cursor: pointer;
+  text-decoration: underline;
 }
 body, input {
   color: white;
@@ -22,6 +24,7 @@ h1 {
 #root {
   max-width: 900px;
   margin: 50px auto 30px auto;
+  position: relative;
 }
 input {
   width: 100%;
@@ -35,6 +38,13 @@ input {
 }
 input:focus {
   outline: none;
+  color: white;
+}
+a.clear {
+  position: absolute;
+  right: -5px;
+  margin-top: 22px;
+  text-decoration: none;
   color: white;
 }
 #root ul {
@@ -56,3 +66,11 @@ span.time { color: rgb(208, 145, 28); }
 span.date { color: rgb(23, 143, 143); }
 span.zone { text-decoration: underline; }
 p.error { color: rgb(196, 138, 117); margin: 0; }
+div.examples {
+  padding: 0 0 0 20px;
+}
+div.examples h3 {
+  font-size: 18px;
+  margin: 0 0 8px -20px;
+  padding: 0;
+}
