@@ -8,6 +8,7 @@ description = "utility crate for the when command line tool"
 repository = "https://github.com/mitsuhiko/when"
 keywords = ["timezone", "convert", "cli"]
 readme = "README.md"
+rust-version = "1.56.0"
 
 [dependencies]
 chrono = { version = "0.4.19", features = ["serde"] }

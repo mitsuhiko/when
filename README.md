@@ -39,6 +39,12 @@ $ cargo install when-cli
 There is also an [online version](https://mitsuhiko.github.io/when/) you can use
 from your browser.
 
+Note that this project requires a Rust 2021 compatible compiler (1.56.0 or
+later).  Attempting to install this package on an older compiler will result
+in compilation errors (``feature `edition2021` is required``).  If you're
+using rustup make sure to update (`rustup update`), you might be on an older
+version.
+
 ## Usage
 
 Basically takes a single argument which is a string which describes the format

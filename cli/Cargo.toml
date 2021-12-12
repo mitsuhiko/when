@@ -8,6 +8,7 @@ description = "a command line tool for converting times between timezones"
 repository = "https://github.com/mitsuhiko/when"
 keywords = ["timezone", "convert", "cli"]
 readme = "README.md"
+rust-version = "1.56.0"
 
 [[bin]]
 name = "when"
