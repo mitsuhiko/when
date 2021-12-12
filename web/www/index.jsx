@@ -17,26 +17,34 @@ const EXAMPLES = [
   "unix 1639067620 in Tokyo",
 ];
 
-function parseDateExpr(input) {
+function evaluateDateExpr(input) {
   return JSON.parse(wasm.parse_expr(input || "now"));
 }
 
+function parseDate(datetime) {
+  const match = datetime.match(/^([^T]+)T([^.]+)/);
+  return {
+    time: match[2],
+    date: match[1],
+  };
+}
+
 function Location({ location: loc }) {
-  const match = loc.datetime.match(/^([^T]+)T([^.]+)/);
+  const dt = parseDate(loc.datetime);
   return (
     <table>
       <tbody>
         <tr>
           <th>Time</th>
           <td>
-            <span className="time">{match[2]}</span> (
+            <span className="time">{dt.time}</span> (
             {loc.time_of_day.replace(/_/g, " ")})
           </td>
         </tr>
         <tr>
           <th>Date</th>
           <td>
-            <span className="date">{match[1]}</span>
+            <span className="date">{dt.date}</span>
           </td>
         </tr>
         <tr>
@@ -64,34 +72,100 @@ function Location({ location: loc }) {
   );
 }
 
-function Examples(setExpr) {
-  return <div class="examples">
-    <h3>Need inspiration? Try some of these</h3>
-    <ul>{EXAMPLES.map((x, idx) => {
-      return <li key={idx}><a onClick={() => {setExpr(x);}}>{x}</a></li>;
-    })}</ul>
-  </div>;
+function Examples({setExpr}) {
+  return (
+    <div class="examples">
+      <h3>Need inspiration? Try some of these</h3>
+      <ul>
+        {EXAMPLES.map((x, idx) => {
+          return (
+            <li key={idx}>
+              <a
+                onClick={() => {
+                  setExpr(x);
+                }}
+              >
+                {x}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function Results({locations}) {
+  return (
+    <ul>
+      {locations.map((loc, idx) => (
+        <li key={idx}>
+          <Location location={loc} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function getTextResults(locations) {
+  return locations
+    .map((loc) => {
+      const dt = parseDate(loc.datetime);
+      const lines = [
+        `time: ${dt.time} (${loc.time_of_day.replace(/_/g, " ")})`,
+        `date: ${dt.date}`,
+        `zone: ${loc.timezone.name} (${loc.timezone.abbrev}; ${loc.timezone.utc_offset})`,
+      ];
+      if (loc.location) {
+        let location = `location: ${loc.location.name}`;
+        if (loc.location.admin_code) {
+          location += ` (${loc.location.admin_code}; ${loc.location.country})`;
+        } else if (loc.location.country) {
+          location += ` (${loc.location.country})`;
+        }
+        lines.push(location);
+      }
+      return lines.join("\n");
+    })
+    .join("\n\n");
+}
+
+function PlainTextResults({locations}) {
+  const ref = useRef();
+  return <pre ref={ref} onClick={() => {
+    let range = document.createRange();
+    range.selectNodeContents(ref.current);
+    let sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }}>{getTextResults(locations)}</pre>;
 }
 
 function App() {
   const url = new URL(window.location);
   const [inc, setInc] = useState(0);
+  const [asText, setAsText] = useState(url.searchParams.get("format") == "text");
   const [expr, setExpr] = useState(url.searchParams.get("input") || "");
   const inputRef = useRef();
-  const rv = parseDateExpr(expr);
+  const rv = evaluateDateExpr(expr);
 
   useEffect(() => {
     const url = new URL(window.location);
     url.searchParams.set("input", expr);
+    if (asText) {
+      url.searchParams.set("format", "text");
+    } else {
+      url.searchParams.delete("format");
+    }
     window.history.replaceState({}, "", url);
 
-    if (rv.is_relative) {
+    if (rv.is_relative && !asText) {
       const timer = setTimeout(() => {
         setInc(inc + 1);
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [inc, rv.is_relative, location.search]);
+  }, [inc, rv.is_relative, asText, location.search]);
 
   function setExprAndFocus(value) {
     setExpr(value);
@@ -99,7 +173,9 @@ function App() {
       inputRef.current.focus();
     }
   }
-  
+
+  const showResults = expr && rv.locations.length > 0;
+
   return (
     <div>
       <header>
@@ -108,7 +184,13 @@ function App() {
         {" | "}
         <a href="https://lucumr.pocoo.org/">who?</a>
       </header>
-      <a onClick={() => setExprAndFocus('')} title="Clear input (ESC)" className="clear">x</a>
+      <a
+        onClick={() => setExprAndFocus("")}
+        title="Clear input (ESC)"
+        className="clear"
+      >
+        x
+      </a>
       <input
         type="text"
         value={expr}
@@ -124,16 +206,21 @@ function App() {
         size="40"
         autoFocus
       />
-      {!expr && Examples(setExprAndFocus)}
-      {expr && rv.locations && (
-        <ul>
-          {rv.locations.map((loc, idx) => (
-            <li key={idx}>
-              <Location location={loc} />
-            </li>
-          ))}
-        </ul>
-      )}
+      {!expr && <Examples setExpr={setExprAndFocus}/>}
+      {showResults ? (
+        <div className="actions">
+          <a
+            onClick={() => {
+              setAsText(!asText);
+            }}
+          >
+            {asText ? "as table" : "as plain text"}
+          </a>
+        </div>
+      ) : null}
+      {showResults ? (asText
+        ? <PlainTextResults locations={rv.locations}/>
+        : <Results locations={rv.locations}/>) : null}
       {rv.error && (
         <p className="error">
           <strong>Ugh:</strong>
