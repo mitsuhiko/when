@@ -1,5 +1,7 @@
 body {
   background: rgb(41, 41, 40);
+  margin: 0;
+  padding: 20px;
 }
 a {
   color: #888;
@@ -23,11 +25,11 @@ h1 {
 }
 #root {
   max-width: 900px;
-  margin: 50px auto 30px auto;
+  margin: 30px auto 10px auto;
   position: relative;
 }
 input {
-  width: 100%;
+  width: calc(100% - 16px);
   background: rgb(57, 57, 53);
   border: none;
   border-bottom: 2px solid #888;
@@ -35,6 +37,7 @@ input {
   color: #aaa;
   font-weight: bold;
   margin: 20px 0 20px 0;
+  border-radius: 0;
 }
 input:focus {
   outline: none;
@@ -42,7 +45,7 @@ input:focus {
 }
 a.clear {
   position: absolute;
-  right: -5px;
+  right: 10px;
   margin-top: 22px;
   text-decoration: none;
   color: white;
@@ -73,4 +76,16 @@ div.examples h3 {
   font-size: 18px;
   margin: 0 0 8px -20px;
   padding: 0;
+}
+
+@media only screen and (max-width: 600px) {
+  body {
+    font-size: 15px;
+  }
+  a.clear {
+    margin-top: 25px;
+  }
+  #root table th {
+    width: 70px;
+  }
 }
