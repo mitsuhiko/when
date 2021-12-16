@@ -1,7 +1,8 @@
 use std::fmt;
 use std::ops::Add;
 
-use chrono::{DateTime, Datelike, Duration, NaiveDateTime, Timelike, Utc};
+use chrono::{DateTime, Datelike, Duration, NaiveDateTime, TimeZone, Timelike, Utc};
+use chrono_humanize::HumanTime;
 use chrono_tz::Tz;
 use pest::error::ErrorVariant;
 use pest::iterators::Pair;
@@ -101,6 +102,26 @@ impl TimeAtLocation {
         self.datetime
     }
 
+    /// Gives me the relative time to now.
+    pub fn relative_to<Tz: TimeZone>(&self, now: DateTime<Tz>) -> Duration {
+        self.datetime.signed_duration_since(now)
+    }
+
+    /// Human readable relative date.
+    pub fn relative_to_human<Tz: TimeZone>(&self, now: DateTime<Tz>) -> String {
+        format!(
+            "{:#}",
+            HumanTime::from(
+                self.datetime
+                    .with_second(0)
+                    .unwrap()
+                    .with_nanosecond(0)
+                    .unwrap()
+                    .signed_duration_since(now.with_second(0).unwrap().with_nanosecond(0).unwrap())
+            )
+        )
+    }
+
     /// Returns the zone reference for the timestamp.
     pub fn zone(&self) -> ZoneRef {
         self.zone_ref
@@ -113,8 +134,11 @@ impl<'a> Serialize for TimeAtLocation {
         S: Serializer,
     {
         let mut m = serializer.serialize_map(None)?;
+        let now = Utc::now();
         m.serialize_entry("datetime", &self.datetime)?;
         m.serialize_entry("time_of_day", &get_time_of_day(self.datetime))?;
+        m.serialize_entry("relative_to_now_sec", &self.relative_to(now).num_seconds())?;
+        m.serialize_entry("relative_to_now_human", &self.relative_to_human(now))?;
         m.serialize_entry("timezone", &SerializeZone(&self.zone_ref, &self.datetime))?;
         if self.zone_ref.kind() != LocationKind::Timezone {
             m.serialize_entry("location", &SerializeLocation(&self.zone_ref))?;

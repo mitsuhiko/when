@@ -38,6 +38,7 @@ function Location({ location: loc }) {
           <th>Time</th>
           <td>
             <span className="time">{dt.time}</span> (
+            {loc.relative_to_now_human}{' — '}
             {loc.time_of_day.replace(/_/g, " ")})
           </td>
         </tr>
@@ -112,7 +113,7 @@ function getTextResults(locations) {
     .map((loc) => {
       const dt = parseDate(loc.datetime);
       const lines = [
-        `time: ${dt.time} (${loc.time_of_day.replace(/_/g, " ")})`,
+        `time: ${dt.time} (${loc.relative_to_now_human}; ${loc.time_of_day.replace(/_/g, " ")})`,
         `date: ${dt.date}`,
         `zone: ${loc.timezone.name} (${loc.timezone.abbrev}; ${loc.timezone.utc_offset})`,
       ];

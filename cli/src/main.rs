@@ -6,7 +6,7 @@ use chrono_tz::Tz;
 use clap::Parser;
 use console::style;
 
-use libwhen::{get_time_of_day, InputExpr, LocationKind, ZoneRef};
+use libwhen::{get_time_of_day, InputExpr, LocationKind, TimeAtLocation};
 
 /// A small utility to convert times from the command line.
 ///
@@ -64,12 +64,15 @@ impl fmt::Display for ZoneOffset {
     }
 }
 
-fn print_date(date: DateTime<Tz>, zone: ZoneRef) {
+fn print_date(tod: &TimeAtLocation, now: DateTime<Utc>) {
+    let date = tod.datetime();
+    let zone = tod.zone();
     let adjusted = date.with_timezone(&zone.tz());
     println!(
-        "time: {} ({})",
+        "time: {} ({}; {})",
         style(adjusted.format("%H:%M:%S")).bold().cyan(),
-        get_time_of_day(adjusted)
+        tod.relative_to_human(now),
+        get_time_of_day(adjusted),
     );
     println!(
         "date: {} ({})",
@@ -144,11 +147,12 @@ pub fn execute() -> Result<(), anyhow::Error> {
             );
         }
     } else {
+        let now = Utc::now();
         for (idx, t) in timestamps.iter().enumerate() {
             if idx > 0 {
                 println!();
             }
-            print_date(t.datetime(), t.zone());
+            print_date(t, now);
         }
     }
 

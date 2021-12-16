@@ -12,6 +12,7 @@ rust-version = "1.56.0"
 
 [dependencies]
 chrono = { version = "0.4.19", features = ["serde"] }
+chrono-humanize = "0.2.1"
 chrono-tz = "0.6.1"
 localzone = "0.2.0"
 pest = "2.1.3"
