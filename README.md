@@ -55,7 +55,7 @@ refers to the current machine's timezone.
 time and date in location -> other location
 ```
 
-Multiple locations can be suplied by using the arrow operator multiple times.  This
+Multiple locations can be supplied by using the arrow operator multiple times.  This
 means you can do things like `now in yyz -> sfo -> vie`.
 
 Time and date can be provided roughly like this:
