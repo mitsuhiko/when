@@ -17,7 +17,7 @@ path = "src/main.rs"
 [dependencies]
 libwhen = { version = "0.4.0", path = "../libwhen" }
 anyhow = "1.0.51"
-chrono = { version = "0.4.19", features = ["serde"] }
+chrono = { version = "0.4.20", features = ["serde"] }
 chrono-tz = "0.6.1"
 clap = { version = "3.0.0-rc.0", features = ["color", "derive", "cargo", "wrap_help"] }
 console = "0.15.0"
